@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEET Physics Simulation: Electric Field Lines</title>
+  <style>
+    :root {
+      --bg: #f4f8ff;
+      --panel: #ffffff;
+      --ink: #102033;
+      --muted: #637083;
+      --blue: #1769ff;
+      --green: #0f9d58;
+      --orange: #f57c00;
+      --red: #d93025;
+      --purple: #7b1fa2;
+      --cyan: #00a9e8;
+      --line: #dbe6f6;
+      --soft: #f7faff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #eef5ff, #ffffff);
+      color: var(--ink);
+    }
+
+    header {
+      padding: 24px 18px;
+      text-align: center;
+      background: linear-gradient(135deg, #061d49, #0d6efd);
+      color: white;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: clamp(26px, 4vw, 44px);
+      letter-spacing: 0.3px;
+    }
+
+    header p {
+      margin: 0;
+      opacity: 0.94;
+      font-size: 16px;
+    }
+
+    .wrap {
+      max-width: 1220px;
+      margin: 22px auto;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 12px 30px rgba(16, 32, 51, 0.08);
+      overflow: hidden;
+    }
+
+    .canvas-card { padding: 14px; }
+
+    canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 14px;
+      background: #ffffff;
+      border: 1px solid #e6eefb;
+      touch-action: none;
+    }
+
+    .controls { padding: 18px; }
+
+    h2 { margin: 0 0 14px; font-size: 20px; }
+
+    .mode-box {
+      margin-bottom: 16px;
+      padding: 12px;
+      background: #f7faff;
+      border: 1px solid #e5eefb;
+      border-radius: 14px;
+    }
+
+    .control {
+      margin-bottom: 15px;
+      padding-bottom: 12px;
+      border-bottom: 1px dashed #d8e3f2;
+    }
+
+    .control:last-of-type {
+      border-bottom: 0;
+      margin-bottom: 12px;
+      padding-bottom: 0;
+    }
+
+    label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    label span { color: var(--blue); white-space: nowrap; }
+
+    input[type="range"], select {
+      width: 100%;
+      accent-color: var(--blue);
+    }
+
+    select {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid #cbd9ec;
+      background: white;
+      color: var(--ink);
+      font-weight: 800;
+      font-size: 15px;
+    }
+
+    .toggle-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 8px;
+      background: #f7faff;
+      border: 1px solid #e5eefb;
+      border-radius: 12px;
+      padding: 9px 10px;
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: 0;
+      padding: 11px 10px;
+      border-radius: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      color: white;
+      background: var(--blue);
+      box-shadow: 0 8px 16px rgba(23, 105, 255, 0.2);
+    }
+
+    button:nth-child(2) { background: var(--orange); }
+    button:nth-child(3) { background: var(--red); }
+    button:nth-child(4) { background: var(--purple); }
+    button:nth-child(5) { background: var(--green); grid-column: 1 / -1; }
+
+    .hint {
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 12px;
+      background: #eef6ff;
+      border: 1px solid #d8eaff;
+      color: #0b45a0;
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: #f4f7fb;
+      border: 1px solid #dde8f6;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .blue { color: var(--blue); }
+    .green { color: var(--green); }
+    .orange { color: var(--orange); }
+    .red { color: var(--red); }
+    .purple { color: var(--purple); }
+    .cyan { color: var(--cyan); }
+
+    .content-grid {
+      max-width: 1220px;
+      margin: 0 auto 34px;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .data, .formula, .questions, .traps, .explain { padding: 18px; }
+
+    .status {
+      padding: 14px 16px;
+      border-radius: 14px;
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 16px;
+      text-align: center;
+      background: #eef6ff;
+      color: #0b45a0;
+      border: 1px solid #d8eaff;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .stat {
+      background: var(--soft);
+      border: 1px solid #e5eefb;
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .stat b {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
+
+    .stat span {
+      font-size: 17px;
+      font-weight: 900;
+    }
+
+    .formula p, .questions li, .traps li, .explain li { line-height: 1.58; }
+
+    .formula-box {
+      background: #f8fbff;
+      border: 1px solid #deebff;
+      border-radius: 14px;
+      padding: 14px;
+      margin: 12px 0;
+      display: block;
+    }
+
+    .formula-box.hidden { display: none; }
+
+    .formula-box code {
+      display: block;
+      font-size: 17px;
+      padding: 4px 0;
+      color: #0b45a0;
+      white-space: normal;
+      font-weight: 800;
+    }
+
+    ol, ul { margin: 0; padding-left: 22px; }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      padding: 0 16px 26px;
+      font-size: 14px;
+    }
+
+    @media (max-width: 920px) {
+      .wrap, .content-grid { grid-template-columns: 1fr; }
+      .buttons { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Electric Field Lines Visualizer</h1>
+    <p>NEET Physics Interactive Lab: field lines, electric field, potential, force, and superposition</p>
+  </header>
+
+  <main class="wrap">
+    <section class="card canvas-card">
+      <canvas id="simCanvas" width="940" height="650"></canvas>
+      <div class="legend">
+        <span class="pill red">Red charge: positive</span>
+        <span class="pill blue">Blue charge: negative</span>
+        <span class="pill orange">Orange lines: electric field lines</span>
+        <span class="pill green">Green arrows: field vectors</span>
+        <span class="pill purple">Purple curves: equipotential lines</span>
+        <span class="pill cyan">Cyan dot: test charge</span>
+      </div>
+    </section>
+
+    <aside class="card controls">
+      <h2>Controls</h2>
+
+      <div class="mode-box">
+        <label>Mode</label>
+        <select id="mode">
+          <option value="singlePositive">Single positive charge</option>
+          <option value="singleNegative">Single negative charge</option>
+          <option value="dipole" selected>Dipole: +q and −q</option>
+          <option value="twoPositive">Two positive charges</option>
+          <option value="twoNegative">Two negative charges</option>
+          <option value="unequal">Unequal charges</option>
+        </select>
+      </div>
+
+      <div class="control">
+        <label>Charge 1, q1 <span id="q1Val">+5 μC</span></label>
+        <input id="q1" type="range" min="-10" max="10" step="1" value="5" />
+      </div>
+
+      <div class="control">
+        <label>Charge 2, q2 <span id="q2Val">−5 μC</span></label>
+        <input id="q2" type="range" min="-10" max="10" step="1" value="-5" />
+      </div>
+
+      <div class="control">
+        <label>Distance between charges <span id="distVal">260 px</span></label>
+        <input id="dist" type="range" min="120" max="460" step="10" value="260" />
+      </div>
+
+      <div class="control">
+        <label>Field strength scale <span id="scaleVal">1.0×</span></label>
+        <input id="fieldScale" type="range" min="0.3" max="2.5" step="0.1" value="1" />
+      </div>
+
+      <div class="control">
+        <label>Number of field lines <span id="linesVal">20</span></label>
+        <input id="lineCount" type="range" min="8" max="40" step="2" value="20" />
+      </div>
+
+      <div class="control">
+        <label>Test charge value <span id="testVal">+1 μC</span></label>
+        <input id="testCharge" type="range" min="-5" max="5" step="1" value="1" />
+      </div>
+
+      <div class="toggle-row">
+        <label class="toggle"><input id="showVectors" type="checkbox" checked /> Field vectors</label>
+        <label class="toggle"><input id="showEquip" type="checkbox" /> Equipotentials</label>
+      </div>
+
+      <div class="buttons">
+        <button id="playBtn">Play</button>
+        <button id="pauseBtn">Pause</button>
+        <button id="resetBtn">Reset</button>
+        <button id="clearBtn">Clear Path</button>
+        <button id="formulaBtn">Show/Hide Formulas</button>
+      </div>
+
+      <div class="hint">Drag the cyan test charge on the canvas. Positive test charge moves along electric field; negative test charge moves opposite to electric field.</div>
+    </aside>
+  </main>
+
+  <section class="content-grid">
+    <section class="card data">
+      <h2>Live Calculations</h2>
+      <div id="status" class="status">Electric field direction is defined by force on a positive test charge.</div>
+      <div class="stats">
+        <div class="stat"><b>Coulomb force between q1 and q2</b><span id="force12Out">--</span></div>
+        <div class="stat"><b>Net electric field at test charge</b><span id="netEOut">--</span></div>
+        <div class="stat"><b>Electric potential at test charge</b><span id="potentialOut">--</span></div>
+        <div class="stat"><b>Force on test charge</b><span id="testForceOut">--</span></div>
+        <div class="stat"><b>Positive test charge force</b><span id="posDirOut">Along E</span></div>
+        <div class="stat"><b>Negative test charge force</b><span id="negDirOut">Opposite E</span></div>
+      </div>
+    </section>
+
+    <section class="card formula">
+      <h2>Formula Explanation</h2>
+      <p>Electric field is a vector. Electric potential is a scalar. For multiple charges, use superposition.</p>
+      <div id="formulaBox" class="formula-box">
+        <code>Coulomb's law: F = kq1q2 / r²</code>
+        <code>Magnitude: F = k|q1q2| / r²</code>
+        <code>Electric field: E = F/q</code>
+        <code>Point charge field: E = kq / r²</code>
+        <code>Electric potential: V = kq / r</code>
+        <code>Force on charge: F = qE</code>
+        <code>Superposition: net field = vector sum of fields due to all charges</code>
+      </div>
+      <p><b>NEET key:</b> Field lines come out of positive charge and enter negative charge. Field lines never intersect.</p>
+    </section>
+
+    <section class="card explain">
+      <h2>Simple NEET Explanation</h2>
+      <ul>
+        <li>Electric field is the region around a charge where another charge feels force.</li>
+        <li>Electric field lines start from positive charge and end on negative charge.</li>
+        <li>Field lines never intersect each other.</li>
+        <li>Closer field lines mean stronger electric field.</li>
+        <li>Electric field direction is the direction of force on a positive test charge.</li>
+        <li>For a negative test charge, force is opposite to electric field direction.</li>
+        <li>In a dipole, field lines go from positive charge to negative charge.</li>
+        <li>Net electric field is found using vector addition.</li>
+        <li>Electric potential is scalar, but electric field is vector.</li>
+      </ul>
+    </section>
+
+    <section class="card traps">
+      <h2>NEET Traps</h2>
+      <ul>
+        <li>Electric field lines never cross.</li>
+        <li>Electric field direction is defined using a positive test charge.</li>
+        <li>Field lines come out of positive charge and enter negative charge.</li>
+        <li>Electric field is vector; electric potential is scalar.</li>
+        <li>At the midpoint of equal opposite charges, electric field is not zero.</li>
+        <li>At the midpoint of equal like charges, electric field is zero.</li>
+        <li>For unequal charges, neutral point is not exactly at the midpoint.</li>
+        <li>Electric field is stronger where field lines are closer.</li>
+        <li>A negative charge moves opposite to electric field direction.</li>
+        <li>Coulomb force follows inverse square law.</li>
+      </ul>
+    </section>
+
+    <section class="card questions" style="grid-column: 1 / -1; padding: 18px;">
+      <h2>5 NEET-Style Observation Questions</h2>
+      <ol>
+        <li>What happens to electric field strength when distance from charge is doubled?</li>
+        <li>Why do electric field lines never intersect?</li>
+        <li>In a dipole, what is the direction of field lines?</li>
+        <li>Where is the electric field zero for two equal positive charges?</li>
+        <li>Why does a negative test charge move opposite to electric field direction?</li>
+      </ol>
+    </section>
+  </section>
+
+  <footer>
+    AI Powered Physics for NEET • Interactive Simulation Lab • Dr AI Academy
+  </footer>
+
+  <script>
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const modeEl = document.getElementById('mode');
+    const q1El = document.getElementById('q1');
+    const q2El = document.getElementById('q2');
+    const distEl = document.getElementById('dist');
+    const fieldScaleEl = document.getElementById('fieldScale');
+    const lineCountEl = document.getElementById('lineCount');
+    const testChargeEl = document.getElementById('testCharge');
+    const showVectorsEl = document.getElementById('showVectors');
+    const showEquipEl = document.getElementById('showEquip');
+
+    const q1Val = document.getElementById('q1Val');
+    const q2Val = document.getElementById('q2Val');
+    const distVal = document.getElementById('distVal');
+    const scaleVal = document.getElementById('scaleVal');
+    const linesVal = document.getElementById('linesVal');
+    const testVal = document.getElementById('testVal');
+
+    const statusEl = document.getElementById('status');
+    const force12Out = document.getElementById('force12Out');
+    const netEOut = document.getElementById('netEOut');
+    const potentialOut = document.getElementById('potentialOut');
+    const testForceOut = document.getElementById('testForceOut');
+    const formulaBox = document.getElementById('formulaBox');
+
+    const playBtn = document.getElementById('playBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const formulaBtn = document.getElementById('formulaBtn');
+
+    const k = 9e9;
+    const kVisual = 900;
+    let isPlaying = false;
+    let lastFrame = null;
+    let dragging = false;
+    let test = { x: 470, y: 180, vx: 0, vy: 0 };
+    let path = [];
+
+    function signText(q) {
+      return q > 0 ? `+${q} μC` : q < 0 ? `${q} μC` : '0 μC';
+    }
+
+    function fmt(num, unit = '') {
+      if (!Number.isFinite(num)) return '--';
+      if (Math.abs(num) >= 1000) return `${num.toExponential(2)} ${unit}`.trim();
+      return `${num.toFixed(2)} ${unit}`.trim();
+    }
+
+    // Apply the selected preset mode to charges and control availability.
+    function applyMode() {
+      const mode = modeEl.value;
+      if (mode === 'singlePositive') { q1El.value = 5; q2El.value = 0; }
+      if (mode === 'singleNegative') { q1El.value = -5; q2El.value = 0; }
+      if (mode === 'dipole') { q1El.value = 5; q2El.value = -5; }
+      if (mode === 'twoPositive') { q1El.value = 5; q2El.value = 5; }
+      if (mode === 'twoNegative') { q1El.value = -5; q2El.value = -5; }
+      if (mode === 'unequal') { q1El.value = 8; q2El.value = -4; }
+      resetTest(false);
+    }
+
+    function getCharges() {
+      const q1 = Number(q1El.value);
+      const q2 = Number(q2El.value);
+      const d = Number(distEl.value);
+      const cx = canvas.width / 2;
+      const cy = 290;
+      const charges = [];
+      if (q1 !== 0) charges.push({ x: cx - d / 2, y: cy, q: q1, label: 'q1' });
+      if (q2 !== 0) charges.push({ x: cx + d / 2, y: cy, q: q2, label: 'q2' });
+      if (charges.length === 1) charges[0].x = cx;
+      return charges;
+    }
+
+    // Electric field vector at point due to all charges.
+    function fieldAt(x, y, charges) {
+      let ex = 0, ey = 0;
+      for (const c of charges) {
+        const dx = x - c.x;
+        const dy = y - c.y;
+        const r2 = dx * dx + dy * dy;
+        const r = Math.sqrt(r2);
+        if (r < 24) continue;
+        const e = kVisual * c.q / r2;
+        ex += e * dx / r;
+        ey += e * dy / r;
+      }
+      return { ex, ey, mag: Math.hypot(ex, ey) };
+    }
+
+    // Electric potential at point due to all charges. Scalar sum.
+    function potentialAt(x, y, charges) {
+      let v = 0;
+      for (const c of charges) {
+        const r = Math.hypot(x - c.x, y - c.y);
+        if (r < 20) continue;
+        v += kVisual * c.q / r;
+      }
+      return v;
+    }
+
+    function drawArrow(x1, y1, x2, y2, color, label = '', dotted = false) {
+      const headLen = 10;
+      const angle = Math.atan2(y2 - y1, x2 - x1);
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 2.5;
+      if (dotted) ctx.setLineDash([6, 5]);
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+      ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+      ctx.closePath();
+      ctx.fill();
+      if (label) {
+        ctx.font = 'bold 13px Arial';
+        ctx.fillText(label, x2 + 6, y2 - 6);
+      }
+      ctx.restore();
+    }
+
+    function drawCharge(c) {
+      const radius = 22;
+      const isPos = c.q > 0;
+      ctx.save();
+      ctx.fillStyle = isPos ? '#d93025' : '#1769ff';
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 24px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(isPos ? '+' : '−', c.x, c.y - 1);
+      ctx.fillStyle = '#102033';
+      ctx.textBaseline = 'alphabetic';
+      ctx.font = 'bold 14px Arial';
+      ctx.fillText(`${c.label}: ${signText(c.q)}`, c.x, c.y + 46);
+      ctx.restore();
+    }
+
+    function insideCanvas(x, y) {
+      return x >= 15 && x <= canvas.width - 15 && y >= 70 && y <= 420;
+    }
+
+    // Trace one electric field line from a starting point.
+    function traceLine(startX, startY, charges, directionSign) {
+      const pts = [];
+      let x = startX, y = startY;
+      const step = 8;
+      for (let i = 0; i < 260; i++) {
+        pts.push({ x, y });
+        const field = fieldAt(x, y, charges);
+        if (field.mag < 0.0001) break;
+        x += directionSign * step * field.ex / field.mag;
+        y += directionSign * step * field.ey / field.mag;
+        if (!insideCanvas(x, y)) break;
+        let stop = false;
+        for (const c of charges) {
+          if (Math.hypot(x - c.x, y - c.y) < 24) stop = true;
+        }
+        if (stop) break;
+      }
+      return pts;
+    }
+
+    function drawFieldLines(charges) {
+      const count = Number(lineCountEl.value);
+      const active = charges.filter(c => Math.abs(c.q) > 0);
+      if (!active.length) return;
+
+      ctx.save();
+      ctx.strokeStyle = 'rgba(245, 124, 0, 0.72)';
+      ctx.fillStyle = 'rgba(245, 124, 0, 0.82)';
+      ctx.lineWidth = 1.8;
+
+      for (const c of active) {
+        const linesForCharge = Math.max(6, Math.round(count * Math.abs(c.q) / Math.max(1, active.reduce((s, a) => s + Math.abs(a.q), 0))));
+        for (let i = 0; i < linesForCharge; i++) {
+          const a = (2 * Math.PI * i) / linesForCharge;
+          const startX = c.x + Math.cos(a) * 28;
+          const startY = c.y + Math.sin(a) * 28;
+          const directionSign = c.q > 0 ? 1 : -1;
+          const pts = traceLine(startX, startY, charges, directionSign);
+          if (pts.length < 2) continue;
+          ctx.beginPath();
+          ctx.moveTo(pts[0].x, pts[0].y);
+          for (let j = 1; j < pts.length; j++) ctx.lineTo(pts[j].x, pts[j].y);
+          ctx.stroke();
+
+          const mid = Math.floor(pts.length * 0.45);
+          if (pts[mid + 1]) {
+            const p1 = pts[mid];
+            const p2 = pts[mid + 1];
+            const ang = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+            ctx.beginPath();
+            ctx.moveTo(p2.x, p2.y);
+            ctx.lineTo(p2.x - 8 * Math.cos(ang - Math.PI / 6), p2.y - 8 * Math.sin(ang - Math.PI / 6));
+            ctx.lineTo(p2.x - 8 * Math.cos(ang + Math.PI / 6), p2.y - 8 * Math.sin(ang + Math.PI / 6));
+            ctx.closePath();
+            ctx.fill();
+          }
+        }
+      }
+      ctx.restore();
+    }
+
+    function drawVectors(charges) {
+      if (!showVectorsEl.checked) return;
+      const spacing = 75;
+      for (let x = 90; x <= 850; x += spacing) {
+        for (let y = 110; y <= 410; y += spacing) {
+          let tooClose = charges.some(c => Math.hypot(x - c.x, y - c.y) < 42);
+          if (tooClose) continue;
+          const e = fieldAt(x, y, charges);
+          if (e.mag < 0.002) continue;
+          const len = Math.min(35, Math.max(8, Math.sqrt(e.mag) * 28 * Number(fieldScaleEl.value)));
+          drawArrow(x, y, x + len * e.ex / e.mag, y + len * e.ey / e.mag, 'rgba(15,157,88,0.75)');
+        }
+      }
+    }
+
+    function drawEquipotentials(charges) {
+      if (!showEquipEl.checked) return;
+      // Lightweight equipotential approximation: draw potential contours around each charge and a few neutral-ish curves.
+      ctx.save();
+      ctx.strokeStyle = 'rgba(123, 31, 162, 0.35)';
+      ctx.lineWidth = 1.5;
+      for (const c of charges) {
+        for (let r = 45; r <= 180; r += 35) {
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, r, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+      if (charges.length === 2 && charges[0].q * charges[1].q < 0) {
+        ctx.setLineDash([7, 6]);
+        ctx.beginPath();
+        ctx.moveTo(canvas.width / 2, 85);
+        ctx.lineTo(canvas.width / 2, 420);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      ctx.restore();
+    }
+
+    function drawTestCharge(charges) {
+      const qTest = Number(testChargeEl.value);
+      if (path.length > 1) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(0,169,232,0.55)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(path[0].x, path[0].y);
+        for (const p of path) ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      const e = fieldAt(test.x, test.y, charges);
+      if (e.mag > 0.0001) {
+        const sign = qTest >= 0 ? 1 : -1;
+        const len = 58;
+        drawArrow(test.x, test.y, test.x + sign * len * e.ex / e.mag, test.y + sign * len * e.ey / e.mag, '#00a9e8', 'force');
+      }
+
+      ctx.save();
+      ctx.fillStyle = qTest >= 0 ? '#00a9e8' : '#7b1fa2';
+      ctx.beginPath();
+      ctx.arc(test.x, test.y, 12, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 14px Arial';
+      ctx.fillText(`Test q = ${signText(qTest)}`, test.x + 16, test.y - 12);
+      ctx.restore();
+    }
+
+    function updateLiveValues(charges) {
+      q1Val.textContent = signText(Number(q1El.value));
+      q2Val.textContent = signText(Number(q2El.value));
+      distVal.textContent = `${Number(distEl.value)} px`;
+      scaleVal.textContent = `${Number(fieldScaleEl.value).toFixed(1)}×`;
+      linesVal.textContent = `${Number(lineCountEl.value)}`;
+      testVal.textContent = signText(Number(testChargeEl.value));
+
+      const qTest = Number(testChargeEl.value);
+      const e = fieldAt(test.x, test.y, charges);
+      const V = potentialAt(test.x, test.y, charges);
+      const forceTest = Math.abs(qTest) * e.mag;
+
+      if (charges.length >= 2) {
+        const c1 = charges[0], c2 = charges[1];
+        const rPx = Math.hypot(c1.x - c2.x, c1.y - c2.y);
+        // Simple display scale: q in microcoulomb and r in arbitrary canvas metre scale.
+        const rMetre = rPx / 100;
+        const q1C = c1.q * 1e-6;
+        const q2C = c2.q * 1e-6;
+        const F = k * Math.abs(q1C * q2C) / (rMetre * rMetre);
+        force12Out.textContent = fmt(F, 'N');
+      } else {
+        force12Out.textContent = 'Only one charge';
+      }
+
+      netEOut.textContent = fmt(e.mag, 'arb. unit');
+      potentialOut.textContent = fmt(V, 'arb. unit');
+      testForceOut.textContent = fmt(forceTest, 'arb. unit');
+    }
+
+    function drawDistance(charges) {
+      if (charges.length < 2) return;
+      const c1 = charges[0], c2 = charges[1];
+      ctx.save();
+      ctx.strokeStyle = '#1769ff';
+      ctx.setLineDash([7, 6]);
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(c1.x, c1.y + 62);
+      ctx.lineTo(c2.x, c2.y + 62);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#1769ff';
+      ctx.font = 'bold 14px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(`distance = ${Number(distEl.value)} px`, (c1.x + c2.x) / 2, c1.y + 84);
+      ctx.restore();
+    }
+
+    function drawInfoPanel(charges) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.96)';
+      ctx.strokeStyle = '#dbe6f6';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(36, 468, 868, 140, 16);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 17px Arial';
+      ctx.fillText('NEET Logic', 58, 498);
+      ctx.font = '15px Arial';
+      ctx.fillText('Field lines start from + charge and end on − charge. Direction is defined using a positive test charge.', 58, 526);
+      ctx.fillText('Closer field lines mean stronger electric field. Field lines never intersect.', 58, 552);
+      ctx.fillText('Electric field is vector; electric potential is scalar. Net field is vector sum by superposition.', 58, 578);
+      ctx.restore();
+    }
+
+    function drawScene() {
+      const charges = getCharges();
+      updateLiveValues(charges);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Grid
+      ctx.save();
+      ctx.strokeStyle = '#eef3fb';
+      ctx.lineWidth = 1;
+      for (let gx = 0; gx <= canvas.width; gx += 40) { ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, canvas.height); ctx.stroke(); }
+      for (let gy = 0; gy <= canvas.height; gy += 40) { ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(canvas.width, gy); ctx.stroke(); }
+      ctx.restore();
+
+      ctx.save();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 22px Arial';
+      ctx.fillText('Electric Field Lines', 28, 38);
+      ctx.font = '15px Arial';
+      ctx.fillStyle = '#637083';
+      ctx.fillText('Drag the cyan test charge. Use Play to see force-based motion.', 28, 62);
+      ctx.restore();
+
+      drawEquipotentials(charges);
+      drawFieldLines(charges);
+      drawVectors(charges);
+      drawDistance(charges);
+      for (const c of charges) drawCharge(c);
+      drawTestCharge(charges);
+      drawInfoPanel(charges);
+    }
+
+    function resetTest(clearPath = true) {
+      test = { x: 470, y: 180, vx: 0, vy: 0 };
+      if (clearPath) path = [];
+      lastFrame = null;
+      drawScene();
+    }
+
+    function animate(timestamp) {
+      if (lastFrame === null) lastFrame = timestamp;
+      const dt = Math.min(0.035, (timestamp - lastFrame) / 1000);
+      lastFrame = timestamp;
+
+      const charges = getCharges();
+      if (isPlaying && !dragging) {
+        const qTest = Number(testChargeEl.value);
+        const e = fieldAt(test.x, test.y, charges);
+        const sign = qTest >= 0 ? 1 : -1;
+        const accScale = 90 * Number(fieldScaleEl.value);
+        test.vx += sign * e.ex * accScale * dt;
+        test.vy += sign * e.ey * accScale * dt;
+        test.vx *= 0.985;
+        test.vy *= 0.985;
+        const maxSpeed = 260;
+        const speed = Math.hypot(test.vx, test.vy);
+        if (speed > maxSpeed) {
+          test.vx = test.vx / speed * maxSpeed;
+          test.vy = test.vy / speed * maxSpeed;
+        }
+        test.x += test.vx * dt;
+        test.y += test.vy * dt;
+        if (!insideCanvas(test.x, test.y)) {
+          test.x = Math.max(30, Math.min(canvas.width - 30, test.x));
+          test.y = Math.max(80, Math.min(420, test.y));
+          test.vx *= -0.25;
+          test.vy *= -0.25;
+        }
+        for (const c of charges) {
+          if (Math.hypot(test.x - c.x, test.y - c.y) < 34) {
+            test.vx *= -0.4;
+            test.vy *= -0.4;
+            test.x += Math.sign(test.x - c.x || 1) * 8;
+            test.y += Math.sign(test.y - c.y || 1) * 8;
+          }
+        }
+        path.push({ x: test.x, y: test.y });
+        if (path.length > 700) path.shift();
+      }
+
+      drawScene();
+      requestAnimationFrame(animate);
+    }
+
+    function canvasPoint(evt) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+      const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+      return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+    }
+
+    function startDrag(evt) {
+      const p = canvasPoint(evt);
+      if (Math.hypot(p.x - test.x, p.y - test.y) < 28) {
+        dragging = true;
+        isPlaying = false;
+        test.vx = 0; test.vy = 0;
+        evt.preventDefault();
+      }
+    }
+
+    function moveDrag(evt) {
+      if (!dragging) return;
+      const p = canvasPoint(evt);
+      test.x = Math.max(30, Math.min(canvas.width - 30, p.x));
+      test.y = Math.max(80, Math.min(420, p.y));
+      path.push({ x: test.x, y: test.y });
+      if (path.length > 700) path.shift();
+      evt.preventDefault();
+    }
+
+    function endDrag() { dragging = false; }
+
+    modeEl.addEventListener('change', applyMode);
+    [q1El, q2El, distEl, fieldScaleEl, lineCountEl, testChargeEl, showVectorsEl, showEquipEl].forEach(el => {
+      el.addEventListener('input', () => { isPlaying = false; test.vx = 0; test.vy = 0; drawScene(); });
+      el.addEventListener('change', () => { isPlaying = false; test.vx = 0; test.vy = 0; drawScene(); });
+    });
+
+    playBtn.addEventListener('click', () => { isPlaying = true; lastFrame = null; });
+    pauseBtn.addEventListener('click', () => { isPlaying = false; });
+    resetBtn.addEventListener('click', () => { isPlaying = false; applyMode(); resetTest(true); });
+    clearBtn.addEventListener('click', () => { path = []; drawScene(); });
+    formulaBtn.addEventListener('click', () => { formulaBox.classList.toggle('hidden'); });
+
+    canvas.addEventListener('mousedown', startDrag);
+    canvas.addEventListener('mousemove', moveDrag);
+    window.addEventListener('mouseup', endDrag);
+    canvas.addEventListener('touchstart', startDrag, { passive: false });
+    canvas.addEventListener('touchmove', moveDrag, { passive: false });
+    window.addEventListener('touchend', endDrag);
+
+    applyMode();
+    resetTest(true);
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
