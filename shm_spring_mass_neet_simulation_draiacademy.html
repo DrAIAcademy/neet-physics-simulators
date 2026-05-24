@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEET Physics Simulation: SHM Spring-Mass System</title>
+  <style>
+    :root {
+      --bg: #f4f8ff;
+      --panel: #ffffff;
+      --ink: #102033;
+      --muted: #637083;
+      --blue: #1769ff;
+      --green: #0f9d58;
+      --orange: #f57c00;
+      --red: #d93025;
+      --purple: #7b1fa2;
+      --cyan: #00a9e8;
+      --line: #dbe6f6;
+      --soft: #f7faff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #eef5ff, #ffffff);
+      color: var(--ink);
+    }
+
+    header {
+      padding: 24px 18px;
+      text-align: center;
+      background: linear-gradient(135deg, #061d49, #0d6efd);
+      color: white;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: clamp(26px, 4vw, 44px);
+      letter-spacing: 0.3px;
+    }
+
+    header p {
+      margin: 0;
+      opacity: 0.94;
+      font-size: 16px;
+    }
+
+    .wrap {
+      max-width: 1220px;
+      margin: 22px auto;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 370px;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 12px 30px rgba(16, 32, 51, 0.08);
+      overflow: hidden;
+    }
+
+    .canvas-card { padding: 14px; }
+
+    canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 14px;
+      background: #ffffff;
+      border: 1px solid #e6eefb;
+    }
+
+    .controls { padding: 18px; }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 20px;
+    }
+
+    .control {
+      margin-bottom: 17px;
+      padding-bottom: 14px;
+      border-bottom: 1px dashed #d8e3f2;
+    }
+
+    .control:last-of-type {
+      border-bottom: 0;
+      margin-bottom: 12px;
+      padding-bottom: 0;
+    }
+
+    label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    label span {
+      color: var(--blue);
+      white-space: nowrap;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--blue);
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: 0;
+      padding: 11px 10px;
+      border-radius: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      color: white;
+      background: var(--blue);
+      box-shadow: 0 8px 16px rgba(23, 105, 255, 0.2);
+    }
+
+    button:nth-child(2) { background: var(--orange); }
+    button:nth-child(3) { background: var(--red); }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: #f4f7fb;
+      border: 1px solid #dde8f6;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .blue { color: var(--blue); }
+    .green { color: var(--green); }
+    .orange { color: var(--orange); }
+    .red { color: var(--red); }
+    .purple { color: var(--purple); }
+    .cyan { color: var(--cyan); }
+
+    .content-grid {
+      max-width: 1220px;
+      margin: 0 auto 34px;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .data, .formula, .questions, .traps, .explain { padding: 18px; }
+
+    .status {
+      padding: 14px 16px;
+      border-radius: 14px;
+      font-size: 19px;
+      font-weight: 900;
+      margin-bottom: 16px;
+      text-align: center;
+      background: #eef6ff;
+      color: #0b45a0;
+      border: 1px solid #d8eaff;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .stat {
+      background: var(--soft);
+      border: 1px solid #e5eefb;
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .stat b {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
+
+    .stat span {
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .formula p, .questions li, .traps li, .explain li {
+      line-height: 1.58;
+    }
+
+    .formula-box {
+      background: #f8fbff;
+      border: 1px solid #deebff;
+      border-radius: 14px;
+      padding: 14px;
+      margin: 12px 0;
+    }
+
+    .formula-box code {
+      display: block;
+      font-size: 17px;
+      padding: 4px 0;
+      color: #0b45a0;
+      white-space: normal;
+      font-weight: 800;
+    }
+
+    ol, ul { margin: 0; padding-left: 22px; }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      padding: 0 16px 26px;
+      font-size: 14px;
+    }
+
+    @media (max-width: 920px) {
+      .wrap, .content-grid { grid-template-columns: 1fr; }
+      .buttons { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>SHM Spring-Mass Simulator</h1>
+    <p>NEET Physics Interactive Lab: restoring force, displacement, velocity, acceleration, time period, and energy</p>
+  </header>
+
+  <main class="wrap">
+    <section class="card canvas-card">
+      <canvas id="simCanvas" width="940" height="620"></canvas>
+      <div class="legend">
+        <span class="pill blue">Blue: displacement x</span>
+        <span class="pill green">Green: velocity direction</span>
+        <span class="pill red">Red: restoring force F = −kx</span>
+        <span class="pill purple">Purple: acceleration a = −ω²x</span>
+        <span class="pill orange">Orange graph: displacement vs time</span>
+      </div>
+    </section>
+
+    <aside class="card controls">
+      <h2>Change Variables</h2>
+
+      <div class="control">
+        <label>Mass, m <span id="massVal">2.0 kg</span></label>
+        <input id="mass" type="range" min="0.5" max="10" step="0.1" value="2" />
+      </div>
+
+      <div class="control">
+        <label>Spring constant, k <span id="springVal">40 N/m</span></label>
+        <input id="spring" type="range" min="5" max="200" step="1" value="40" />
+      </div>
+
+      <div class="control">
+        <label>Amplitude, A <span id="ampVal">1.0 m</span></label>
+        <input id="amp" type="range" min="0.2" max="3" step="0.1" value="1" />
+      </div>
+
+      <div class="control">
+        <label>Initial phase, φ <span id="phaseVal">0°</span></label>
+        <input id="phase" type="range" min="0" max="360" step="5" value="0" />
+      </div>
+
+      <div class="control">
+        <label>Damping level <span id="dampVal">0.00</span></label>
+        <input id="damping" type="range" min="0" max="0.3" step="0.01" value="0" />
+      </div>
+
+      <div class="buttons">
+        <button id="playBtn">Play</button>
+        <button id="pauseBtn">Pause</button>
+        <button id="resetBtn">Reset</button>
+      </div>
+    </aside>
+  </main>
+
+  <section class="content-grid">
+    <section class="card data">
+      <h2>Live Calculations</h2>
+      <div id="status" class="status">Ideal SHM: restoring force always acts towards mean position.</div>
+      <div class="stats">
+        <div class="stat"><b>Angular frequency, ω</b><span id="omegaOut">--</span></div>
+        <div class="stat"><b>Time period, T</b><span id="periodOut">--</span></div>
+        <div class="stat"><b>Frequency, f</b><span id="freqOut">--</span></div>
+        <div class="stat"><b>Displacement, x</b><span id="xOut">--</span></div>
+        <div class="stat"><b>Velocity, v</b><span id="vOut">--</span></div>
+        <div class="stat"><b>Acceleration, a</b><span id="aOut">--</span></div>
+        <div class="stat"><b>Restoring force, F</b><span id="forceOut">--</span></div>
+        <div class="stat"><b>Maximum velocity</b><span id="vmaxOut">--</span></div>
+        <div class="stat"><b>Maximum acceleration</b><span id="amaxOut">--</span></div>
+        <div class="stat"><b>Total energy</b><span id="energyOut">--</span></div>
+      </div>
+    </section>
+
+    <section class="card formula">
+      <h2>Formula Explanation</h2>
+      <p>Spring-mass SHM happens when restoring force is directly proportional to displacement and always points towards mean position.</p>
+      <div class="formula-box">
+        <code>SHM condition: F = −kx</code>
+        <code>Acceleration relation: a = −ω²x</code>
+        <code>Displacement: x = A sin(ωt + φ)</code>
+        <code>Angular frequency: ω = √(k/m)</code>
+        <code>Time period: T = 2π√(m/k)</code>
+        <code>Frequency: f = 1/T</code>
+        <code>Total energy: E = ½kA²</code>
+      </div>
+      <p><b>NEET key:</b> In ideal SHM, time period depends on mass and spring constant, not on amplitude.</p>
+    </section>
+
+    <section class="card explain">
+      <h2>Simple NEET Explanation</h2>
+      <ul>
+        <li>SHM is repeated to-and-fro motion about the mean position.</li>
+        <li>Restoring force always acts towards mean position.</li>
+        <li>At mean position, speed is maximum and acceleration is zero.</li>
+        <li>At extreme position, speed is zero and acceleration is maximum.</li>
+        <li>Increasing mass increases time period.</li>
+        <li>Increasing spring constant decreases time period.</li>
+        <li>For ideal SHM, time period does not depend on amplitude.</li>
+      </ul>
+    </section>
+
+    <section class="card traps">
+      <h2>NEET Traps</h2>
+      <ul>
+        <li>At mean position, acceleration is zero but velocity is maximum.</li>
+        <li>At extreme position, velocity is zero but acceleration is maximum.</li>
+        <li>Restoring force is always opposite to displacement.</li>
+        <li>SHM acceleration is not constant; it changes with displacement.</li>
+        <li>Time period of ideal spring-mass SHM does not depend on amplitude.</li>
+        <li>Total energy remains constant in ideal SHM.</li>
+        <li>Kinetic energy is maximum at mean position.</li>
+        <li>Potential energy is maximum at extreme positions.</li>
+      </ul>
+    </section>
+
+    <section class="card questions" style="grid-column: 1 / -1; padding: 18px;">
+      <h2>5 NEET-Style Observation Questions</h2>
+      <ol>
+        <li>What happens to time period when mass is increased?</li>
+        <li>What happens to time period when spring constant is increased?</li>
+        <li>Where is velocity maximum: mean position or extreme position?</li>
+        <li>Where is acceleration maximum: mean position or extreme position?</li>
+        <li>Why is restoring force written as F = −kx?</li>
+      </ol>
+    </section>
+  </section>
+
+  <footer>
+    AI Powered Physics for NEET • Interactive Simulation Lab • Dr AI Academy
+  </footer>
+
+  <script>
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const massEl = document.getElementById('mass');
+    const springEl = document.getElementById('spring');
+    const ampEl = document.getElementById('amp');
+    const phaseEl = document.getElementById('phase');
+    const dampingEl = document.getElementById('damping');
+
+    const massVal = document.getElementById('massVal');
+    const springVal = document.getElementById('springVal');
+    const ampVal = document.getElementById('ampVal');
+    const phaseVal = document.getElementById('phaseVal');
+    const dampVal = document.getElementById('dampVal');
+
+    const statusEl = document.getElementById('status');
+    const omegaOut = document.getElementById('omegaOut');
+    const periodOut = document.getElementById('periodOut');
+    const freqOut = document.getElementById('freqOut');
+    const xOut = document.getElementById('xOut');
+    const vOut = document.getElementById('vOut');
+    const aOut = document.getElementById('aOut');
+    const forceOut = document.getElementById('forceOut');
+    const vmaxOut = document.getElementById('vmaxOut');
+    const amaxOut = document.getElementById('amaxOut');
+    const energyOut = document.getElementById('energyOut');
+
+    const playBtn = document.getElementById('playBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    let isPlaying = true;
+    let time = 0;
+    let lastFrame = null;
+    let animationId = null;
+
+    function fmt(num, unit = '') {
+      if (!Number.isFinite(num)) return '--';
+      return `${num.toFixed(2)} ${unit}`.trim();
+    }
+
+    function degToRad(deg) {
+      return deg * Math.PI / 180;
+    }
+
+    function getParams() {
+      const m = Number(massEl.value);
+      const k = Number(springEl.value);
+      const A = Number(ampEl.value);
+      const phaseDeg = Number(phaseEl.value);
+      const phi = degToRad(phaseDeg);
+      const damping = Number(dampingEl.value);
+      const omega = Math.sqrt(k / m);
+      const T = 2 * Math.PI * Math.sqrt(m / k);
+      const f = 1 / T;
+
+      const decay = Math.exp(-damping * time);
+      const effectiveA = A * decay;
+      const arg = omega * time + phi;
+      const x = effectiveA * Math.sin(arg);
+      const v = effectiveA * omega * Math.cos(arg) - damping * effectiveA * Math.sin(arg);
+      const a = -omega * omega * x;
+      const F = -k * x;
+      const vmax = A * omega;
+      const amax = A * omega * omega;
+      const E = 0.5 * k * A * A;
+
+      return { m, k, A, phaseDeg, phi, damping, omega, T, f, x, v, a, F, vmax, amax, E, effectiveA };
+    }
+
+    function updateLabels(p) {
+      massVal.textContent = `${p.m.toFixed(1)} kg`;
+      springVal.textContent = `${p.k.toFixed(0)} N/m`;
+      ampVal.textContent = `${p.A.toFixed(1)} m`;
+      phaseVal.textContent = `${p.phaseDeg}°`;
+      dampVal.textContent = p.damping.toFixed(2);
+
+      omegaOut.textContent = fmt(p.omega, 'rad/s');
+      periodOut.textContent = fmt(p.T, 's');
+      freqOut.textContent = fmt(p.f, 'Hz');
+      xOut.textContent = fmt(p.x, 'm');
+      vOut.textContent = fmt(p.v, 'm/s');
+      aOut.textContent = fmt(p.a, 'm/s²');
+      forceOut.textContent = fmt(p.F, 'N');
+      vmaxOut.textContent = fmt(p.vmax, 'm/s');
+      amaxOut.textContent = fmt(p.amax, 'm/s²');
+      energyOut.textContent = fmt(p.E, 'J');
+
+      if (Math.abs(p.x) < 0.03 * p.A) {
+        statusEl.textContent = 'Near mean position: velocity is maximum and acceleration is almost zero.';
+      } else if (Math.abs(Math.abs(p.x) - p.effectiveA) < 0.05 * p.A) {
+        statusEl.textContent = 'Near extreme position: velocity is small and acceleration/restoring force are large.';
+      } else {
+        statusEl.textContent = 'Restoring force and acceleration point towards the mean position.';
+      }
+    }
+
+    function drawArrow(x1, y1, x2, y2, color, label, labelDx = 0, labelDy = 0) {
+      const headLen = 13;
+      const a = Math.atan2(y2 - y1, x2 - x1);
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - headLen * Math.cos(a - Math.PI / 6), y2 - headLen * Math.sin(a - Math.PI / 6));
+      ctx.lineTo(x2 - headLen * Math.cos(a + Math.PI / 6), y2 - headLen * Math.sin(a + Math.PI / 6));
+      ctx.closePath();
+      ctx.fill();
+      ctx.font = 'bold 15px Arial';
+      ctx.fillText(label, x2 + labelDx, y2 + labelDy);
+      ctx.restore();
+    }
+
+    function drawSpring(x1, y, x2, coils) {
+      const startLen = 34;
+      const endLen = 22;
+      const amp = 18;
+      const springStart = x1 + startLen;
+      const springEnd = x2 - endLen;
+      const length = springEnd - springStart;
+      const segments = coils * 2;
+
+      ctx.save();
+      ctx.strokeStyle = '#1d3557';
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(x1, y);
+      ctx.lineTo(springStart, y);
+      for (let i = 0; i <= segments; i++) {
+        const x = springStart + (length * i) / segments;
+        const yy = y + (i % 2 === 0 ? -amp : amp);
+        ctx.lineTo(x, yy);
+      }
+      ctx.lineTo(x2, y);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawWall(x, yTop, yBot) {
+      ctx.save();
+      ctx.strokeStyle = '#102033';
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(x, yTop);
+      ctx.lineTo(x, yBot);
+      ctx.stroke();
+      ctx.lineWidth = 2;
+      for (let y = yTop; y <= yBot; y += 18) {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x - 20, y + 14);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawGraph(p) {
+      const gx = 70;
+      const gy = 445;
+      const gw = 800;
+      const gh = 130;
+      const midY = gy + gh / 2;
+
+      ctx.save();
+      ctx.fillStyle = '#fbfdff';
+      ctx.strokeStyle = '#dbe6f6';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(gx, gy, gw, gh, 14);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.strokeStyle = '#cfdced';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(gx + 12, midY);
+      ctx.lineTo(gx + gw - 12, midY);
+      ctx.stroke();
+
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 15px Arial';
+      ctx.fillText('Displacement vs Time Graph', gx + 18, gy + 24);
+      ctx.fillStyle = '#637083';
+      ctx.font = '13px Arial';
+      ctx.fillText('x = A sin(ωt + φ)', gx + 18, gy + 43);
+
+      ctx.strokeStyle = '#f57c00';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      const points = 260;
+      const visibleTime = Math.max(6, 2.2 * p.T);
+      for (let i = 0; i <= points; i++) {
+        const localT = time - visibleTime + (visibleTime * i) / points;
+        const tVal = Math.max(0, localT);
+        const decay = Math.exp(-p.damping * tVal);
+        const xVal = p.A * decay * Math.sin(p.omega * tVal + p.phi);
+        const px = gx + 25 + (gw - 50) * i / points;
+        const py = midY - (xVal / Math.max(p.A, 0.001)) * (gh * 0.34);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+
+      ctx.fillStyle = '#f57c00';
+      ctx.beginPath();
+      ctx.arc(gx + gw - 25, midY - (p.x / Math.max(p.A, 0.001)) * (gh * 0.34), 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function draw(p) {
+      updateLabels(p);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Background grid
+      ctx.save();
+      ctx.strokeStyle = '#eef3fb';
+      ctx.lineWidth = 1;
+      for (let gx = 0; gx <= canvas.width; gx += 40) {
+        ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, canvas.height); ctx.stroke();
+      }
+      for (let gy = 0; gy <= canvas.height; gy += 40) {
+        ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(canvas.width, gy); ctx.stroke();
+      }
+      ctx.restore();
+
+      ctx.save();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 22px Arial';
+      ctx.fillText('Spring-Mass Simple Harmonic Motion', 28, 38);
+      ctx.font = '15px Arial';
+      ctx.fillStyle = '#637083';
+      ctx.fillText('Observe mean position, extreme positions, velocity, restoring force, and acceleration.', 28, 62);
+      ctx.restore();
+
+      const wallX = 95;
+      const baseY = 235;
+      const meanX = 515;
+      const scale = 95;
+      const blockW = 92;
+      const blockH = 76;
+      const blockX = meanX + p.x * scale;
+      const springEnd = blockX - blockW / 2;
+
+      // Track
+      ctx.save();
+      ctx.strokeStyle = '#b8c7da';
+      ctx.lineWidth = 8;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(110, baseY + 56);
+      ctx.lineTo(850, baseY + 56);
+      ctx.stroke();
+      ctx.restore();
+
+      drawWall(wallX, baseY - 95, baseY + 95);
+      drawSpring(wallX, baseY, springEnd, 12);
+
+      // Mean and extreme positions
+      const leftExtreme = meanX - p.A * scale;
+      const rightExtreme = meanX + p.A * scale;
+
+      ctx.save();
+      ctx.strokeStyle = '#1769ff';
+      ctx.setLineDash([7, 7]);
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(meanX, baseY - 120);
+      ctx.lineTo(meanX, baseY + 110);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#1769ff';
+      ctx.font = 'bold 15px Arial';
+      ctx.fillText('Mean position', meanX - 48, baseY - 128);
+
+      ctx.strokeStyle = '#7b1fa2';
+      ctx.setLineDash([5, 6]);
+      ctx.beginPath();
+      ctx.moveTo(leftExtreme, baseY - 98);
+      ctx.lineTo(leftExtreme, baseY + 98);
+      ctx.moveTo(rightExtreme, baseY - 98);
+      ctx.lineTo(rightExtreme, baseY + 98);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#7b1fa2';
+      ctx.fillText('−A', leftExtreme - 12, baseY - 106);
+      ctx.fillText('+A', rightExtreme - 12, baseY - 106);
+      ctx.restore();
+
+      // Block
+      ctx.save();
+      ctx.fillStyle = '#eaf3ff';
+      ctx.strokeStyle = '#1769ff';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.roundRect(blockX - blockW / 2, baseY - blockH / 2, blockW, blockH, 12);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 16px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${p.m.toFixed(1)} kg`, blockX, baseY + 5);
+      ctx.restore();
+
+      // Displacement arrow from mean to block
+      if (Math.abs(blockX - meanX) > 6) {
+        drawArrow(meanX, baseY + 100, blockX, baseY + 100, '#1769ff', 'x', 8, -10);
+      }
+
+      // Velocity arrow
+      if (Math.abs(p.v) > 0.03) {
+        const dir = Math.sign(p.v);
+        drawArrow(blockX, baseY - 70, blockX + dir * 90, baseY - 70, '#0f9d58', 'velocity', dir > 0 ? 8 : -76, -10);
+      }
+
+      // Restoring force arrow
+      if (Math.abs(p.F) > 0.03) {
+        const dirF = Math.sign(p.F);
+        drawArrow(blockX, baseY, blockX + dirF * 105, baseY, '#d93025', 'F = −kx', dirF > 0 ? 8 : -80, -12);
+      }
+
+      // Acceleration arrow
+      if (Math.abs(p.a) > 0.03) {
+        const dirA = Math.sign(p.a);
+        drawArrow(blockX, baseY + 68, blockX + dirA * 90, baseY + 68, '#7b1fa2', 'a = −ω²x', dirA > 0 ? 8 : -92, 22);
+      }
+
+      // Current position labels
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.strokeStyle = '#dbe6f6';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(610, 94, 292, 140, 16);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 17px Arial';
+      ctx.fillText('Live SHM Logic', 630, 122);
+      ctx.font = '15px Arial';
+      ctx.fillText(`x = ${p.x.toFixed(2)} m`, 630, 150);
+      ctx.fillText(`v = ${p.v.toFixed(2)} m/s`, 630, 174);
+      ctx.fillText(`a = ${p.a.toFixed(2)} m/s²`, 630, 198);
+      ctx.fillText(`F = ${p.F.toFixed(2)} N`, 630, 222);
+      ctx.restore();
+
+      // Energy bars
+      const KE = Math.max(0, 0.5 * p.m * p.v * p.v);
+      const PE = Math.max(0, 0.5 * p.k * p.x * p.x);
+      const total = Math.max(p.E, KE + PE, 0.001);
+      const barX = 58;
+      const barY = 330;
+      const barW = 240;
+      const barH = 18;
+      ctx.save();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 16px Arial';
+      ctx.fillText('Energy View', barX, barY - 16);
+      ctx.font = '13px Arial';
+      ctx.fillStyle = '#637083';
+      ctx.fillText('KE max at mean, PE max at extremes', barX, barY + 64);
+
+      ctx.fillStyle = '#eaf3ff';
+      ctx.fillRect(barX, barY, barW, barH);
+      ctx.fillStyle = '#0f9d58';
+      ctx.fillRect(barX, barY, barW * Math.min(KE / total, 1), barH);
+      ctx.strokeStyle = '#dbe6f6';
+      ctx.strokeRect(barX, barY, barW, barH);
+      ctx.fillStyle = '#102033';
+      ctx.fillText('Kinetic Energy', barX + barW + 12, barY + 14);
+
+      ctx.fillStyle = '#eaf3ff';
+      ctx.fillRect(barX, barY + 28, barW, barH);
+      ctx.fillStyle = '#f57c00';
+      ctx.fillRect(barX, barY + 28, barW * Math.min(PE / total, 1), barH);
+      ctx.strokeStyle = '#dbe6f6';
+      ctx.strokeRect(barX, barY + 28, barW, barH);
+      ctx.fillStyle = '#102033';
+      ctx.fillText('Potential Energy', barX + barW + 12, barY + 42);
+      ctx.restore();
+
+      drawGraph(p);
+    }
+
+    function tick(timestamp) {
+      if (lastFrame === null) lastFrame = timestamp;
+      const dt = (timestamp - lastFrame) / 1000;
+      lastFrame = timestamp;
+
+      if (isPlaying) {
+        time += dt;
+      }
+
+      const p = getParams();
+      draw(p);
+      animationId = requestAnimationFrame(tick);
+    }
+
+    function resetSimulation() {
+      time = 0;
+      lastFrame = null;
+      draw(getParams());
+    }
+
+    playBtn.addEventListener('click', () => {
+      isPlaying = true;
+      lastFrame = null;
+    });
+
+    pauseBtn.addEventListener('click', () => {
+      isPlaying = false;
+    });
+
+    resetBtn.addEventListener('click', () => {
+      isPlaying = false;
+      resetSimulation();
+    });
+
+    [massEl, springEl, ampEl, phaseEl, dampingEl].forEach(el => {
+      el.addEventListener('input', () => {
+        resetSimulation();
+      });
+    });
+
+    resetSimulation();
+    animationId = requestAnimationFrame(tick);
+  </script>
+</body>
+</html>

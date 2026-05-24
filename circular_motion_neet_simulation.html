@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEET Physics Simulation: Circular Motion</title>
+  <style>
+    :root {
+      --bg: #f4f8ff;
+      --panel: #ffffff;
+      --ink: #102033;
+      --muted: #637083;
+      --blue: #1769ff;
+      --green: #0f9d58;
+      --orange: #f57c00;
+      --red: #d93025;
+      --purple: #7b1fa2;
+      --cyan: #00a9e8;
+      --line: #dbe6f6;
+      --soft: #f7faff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #eef5ff, #ffffff);
+      color: var(--ink);
+    }
+
+    header {
+      padding: 24px 18px;
+      text-align: center;
+      background: linear-gradient(135deg, #061d49, #0d6efd);
+      color: white;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: clamp(26px, 4vw, 44px);
+      letter-spacing: 0.3px;
+    }
+
+    header p {
+      margin: 0;
+      opacity: 0.94;
+      font-size: 16px;
+    }
+
+    .wrap {
+      max-width: 1220px;
+      margin: 22px auto;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 370px;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 12px 30px rgba(16, 32, 51, 0.08);
+      overflow: hidden;
+    }
+
+    .canvas-card { padding: 14px; }
+
+    canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 14px;
+      background: #ffffff;
+      border: 1px solid #e6eefb;
+    }
+
+    .controls { padding: 18px; }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 20px;
+    }
+
+    .mode-box {
+      margin-bottom: 17px;
+      padding: 12px;
+      background: #f7faff;
+      border: 1px solid #e5eefb;
+      border-radius: 14px;
+    }
+
+    .mode-box label {
+      margin-bottom: 8px;
+    }
+
+    select {
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 12px;
+      border: 1px solid #cbd9ec;
+      background: white;
+      color: var(--ink);
+      font-weight: 800;
+      font-size: 15px;
+    }
+
+    .control {
+      margin-bottom: 17px;
+      padding-bottom: 14px;
+      border-bottom: 1px dashed #d8e3f2;
+    }
+
+    .control:last-of-type {
+      border-bottom: 0;
+      margin-bottom: 12px;
+      padding-bottom: 0;
+    }
+
+    label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    label span {
+      color: var(--blue);
+      white-space: nowrap;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--blue);
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: 0;
+      padding: 11px 10px;
+      border-radius: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      color: white;
+      background: var(--blue);
+      box-shadow: 0 8px 16px rgba(23, 105, 255, 0.2);
+    }
+
+    button:nth-child(2) { background: var(--orange); }
+    button:nth-child(3) { background: var(--red); }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: #f4f7fb;
+      border: 1px solid #dde8f6;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .blue { color: var(--blue); }
+    .green { color: var(--green); }
+    .orange { color: var(--orange); }
+    .red { color: var(--red); }
+    .purple { color: var(--purple); }
+    .cyan { color: var(--cyan); }
+
+    .content-grid {
+      max-width: 1220px;
+      margin: 0 auto 34px;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .data, .formula, .questions, .traps, .explain { padding: 18px; }
+
+    .status {
+      padding: 14px 16px;
+      border-radius: 14px;
+      font-size: 19px;
+      font-weight: 900;
+      margin-bottom: 16px;
+      text-align: center;
+      background: #eef6ff;
+      color: #0b45a0;
+      border: 1px solid #d8eaff;
+    }
+
+    .status.safe {
+      background: #eaf7ee;
+      color: var(--green);
+      border-color: #cdebd6;
+    }
+
+    .status.danger {
+      background: #fff1f0;
+      color: var(--red);
+      border-color: #ffd7d3;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .stat {
+      background: var(--soft);
+      border: 1px solid #e5eefb;
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .stat b {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
+
+    .stat span {
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .formula p, .questions li, .traps li, .explain li {
+      line-height: 1.58;
+    }
+
+    .formula-box {
+      background: #f8fbff;
+      border: 1px solid #deebff;
+      border-radius: 14px;
+      padding: 14px;
+      margin: 12px 0;
+    }
+
+    .formula-box code {
+      display: block;
+      font-size: 17px;
+      padding: 4px 0;
+      color: #0b45a0;
+      white-space: normal;
+      font-weight: 800;
+    }
+
+    ol, ul { margin: 0; padding-left: 22px; }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      padding: 0 16px 26px;
+      font-size: 14px;
+    }
+
+    @media (max-width: 920px) {
+      .wrap, .content-grid { grid-template-columns: 1fr; }
+      .buttons { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Circular Motion Simulator</h1>
+    <p>NEET Physics Interactive Lab: tangential velocity, inward acceleration, centripetal force, and safe turning</p>
+  </header>
+
+  <main class="wrap">
+    <section class="card canvas-card">
+      <canvas id="simCanvas" width="940" height="620"></canvas>
+      <div class="legend">
+        <span class="pill blue">Blue: circular path</span>
+        <span class="pill green">Green: tangential velocity</span>
+        <span class="pill red">Red: centripetal acceleration</span>
+        <span class="pill purple">Purple: centripetal force</span>
+        <span class="pill orange">Orange: friction in car mode</span>
+      </div>
+    </section>
+
+    <aside class="card controls">
+      <h2>Change Variables</h2>
+
+      <div class="mode-box">
+        <label>Mode</label>
+        <select id="mode">
+          <option value="basic">Basic Circular Motion</option>
+          <option value="car">Car Turning on Level Road</option>
+        </select>
+      </div>
+
+      <div class="control">
+        <label>Mass, m <span id="massVal">5 kg</span></label>
+        <input id="mass" type="range" min="1" max="50" step="1" value="5" />
+      </div>
+
+      <div class="control">
+        <label>Radius, r <span id="radiusVal">30 m</span></label>
+        <input id="radius" type="range" min="5" max="100" step="1" value="30" />
+      </div>
+
+      <div class="control">
+        <label>Speed, v <span id="speedVal">15 m/s</span></label>
+        <input id="speed" type="range" min="1" max="50" step="1" value="15" />
+      </div>
+
+      <div class="control">
+        <label>Coefficient of friction, μ <span id="muVal">0.40</span></label>
+        <input id="mu" type="range" min="0" max="1" step="0.01" value="0.40" />
+      </div>
+
+      <div class="control">
+        <label>Gravity, g <span id="gravityVal">9.8 m/s²</span></label>
+        <input id="gravity" type="range" min="1" max="15" step="0.1" value="9.8" />
+      </div>
+
+      <div class="buttons">
+        <button id="playBtn">Play</button>
+        <button id="pauseBtn">Pause</button>
+        <button id="resetBtn">Reset</button>
+      </div>
+    </aside>
+  </main>
+
+  <section class="content-grid">
+    <section class="card data">
+      <h2>Live Calculations</h2>
+      <div id="status" class="status">Basic Circular Motion: velocity is tangential, acceleration is inward.</div>
+      <div class="stats">
+        <div class="stat"><b>Centripetal acceleration</b><span id="acOut">--</span></div>
+        <div class="stat"><b>Centripetal force</b><span id="fcOut">--</span></div>
+        <div class="stat"><b>Angular velocity</b><span id="omegaOut">--</span></div>
+        <div class="stat"><b>Time period</b><span id="periodOut">--</span></div>
+        <div class="stat"><b>Frequency</b><span id="freqOut">--</span></div>
+        <div class="stat"><b>Max safe speed</b><span id="vmaxOut">--</span></div>
+      </div>
+    </section>
+
+    <section class="card formula">
+      <h2>Formula Explanation</h2>
+      <p>Circular motion me speed constant ho sakti hai, but velocity direction change hoti hai. Direction change hone ki wajah se acceleration hota hai.</p>
+      <div class="formula-box">
+        <code>Centripetal acceleration: a = v² / r</code>
+        <code>Centripetal force: F = mv² / r</code>
+        <code>Angular velocity: ω = v / r</code>
+        <code>Time period: T = 2πr / v</code>
+        <code>Frequency: f = 1 / T</code>
+        <code>Level road safe speed: vmax = √(μrg)</code>
+      </div>
+      <p><b>NEET key:</b> Centripetal force koi new force nahi hai. It is the net inward force, provided by tension, friction, gravity, or normal reaction.</p>
+    </section>
+
+    <section class="card explain">
+      <h2>NEET Explanation</h2>
+      <ul>
+        <li>Speed constant ho sakti hai, lekin velocity change hoti hai because direction changes.</li>
+        <li>Centripetal acceleration always centre ki taraf hota hai.</li>
+        <li>Centripetal force is not a separate force; it is net inward force.</li>
+        <li>Level road par car ko turn karne ke liye friction centripetal force provide karta hai.</li>
+        <li>If required centripetal force is greater than available friction, vehicle skid karta hai.</li>
+        <li>Maximum safe speed mass par depend nahi karta because mass cancel ho jata hai.</li>
+      </ul>
+    </section>
+
+    <section class="card traps">
+      <h2>NEET Traps</h2>
+      <ul>
+        <li>Centripetal force inward hota hai, outward nahi.</li>
+        <li>Centrifugal force non-inertial frame me pseudo force hota hai.</li>
+        <li>Constant speed ka matlab zero acceleration nahi hota.</li>
+        <li>Level road par friction centripetal force deta hai.</li>
+        <li>Maximum safe speed independent of mass hoti hai.</li>
+        <li>String break hone par object tangential direction me move karta hai, outward nahi.</li>
+      </ul>
+    </section>
+
+    <section class="card questions" style="grid-column: 1 / -1; padding: 18px;">
+      <h2>5 NEET-Style Observation Questions</h2>
+      <ol>
+        <li>What happens to centripetal force when speed is doubled?</li>
+        <li>What happens to centripetal acceleration when radius is doubled?</li>
+        <li>Why does the object have acceleration even when speed is constant?</li>
+        <li>In car turning, why does increasing μ increase maximum safe speed?</li>
+        <li>Why does maximum safe speed on a level road not depend on mass?</li>
+      </ol>
+    </section>
+  </section>
+
+  <footer>
+    AI Powered Physics for NEET • Interactive Simulation Lab • Dr AI Academy
+  </footer>
+
+  <script>
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const modeEl = document.getElementById('mode');
+    const massEl = document.getElementById('mass');
+    const radiusEl = document.getElementById('radius');
+    const speedEl = document.getElementById('speed');
+    const muEl = document.getElementById('mu');
+    const gravityEl = document.getElementById('gravity');
+
+    const massVal = document.getElementById('massVal');
+    const radiusVal = document.getElementById('radiusVal');
+    const speedVal = document.getElementById('speedVal');
+    const muVal = document.getElementById('muVal');
+    const gravityVal = document.getElementById('gravityVal');
+
+    const statusEl = document.getElementById('status');
+    const acOut = document.getElementById('acOut');
+    const fcOut = document.getElementById('fcOut');
+    const omegaOut = document.getElementById('omegaOut');
+    const periodOut = document.getElementById('periodOut');
+    const freqOut = document.getElementById('freqOut');
+    const vmaxOut = document.getElementById('vmaxOut');
+
+    const playBtn = document.getElementById('playBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    let isPlaying = true;
+    let angle = -Math.PI / 4;
+    let lastFrame = null;
+    let animationId = null;
+
+    function fmt(num, unit = '') {
+      if (!Number.isFinite(num)) return '--';
+      return `${num.toFixed(2)} ${unit}`.trim();
+    }
+
+    function getParams() {
+      const mode = modeEl.value;
+      const m = Number(massEl.value);
+      const r = Number(radiusEl.value);
+      const v = Number(speedEl.value);
+      const mu = Number(muEl.value);
+      const g = Number(gravityEl.value);
+      const ac = (v * v) / r;
+      const fc = m * ac;
+      const omega = v / r;
+      const period = (2 * Math.PI * r) / v;
+      const freq = 1 / period;
+      const vmax = Math.sqrt(mu * r * g);
+      const availableFriction = mu * m * g;
+      const safe = v <= vmax + 1e-9;
+      return { mode, m, r, v, mu, g, ac, fc, omega, period, freq, vmax, availableFriction, safe };
+    }
+
+    function updateLabels(p) {
+      massVal.textContent = `${p.m} kg`;
+      radiusVal.textContent = `${p.r} m`;
+      speedVal.textContent = `${p.v} m/s`;
+      muVal.textContent = p.mu.toFixed(2);
+      gravityVal.textContent = `${p.g.toFixed(1)} m/s²`;
+
+      acOut.textContent = fmt(p.ac, 'm/s²');
+      fcOut.textContent = fmt(p.fc, 'N');
+      omegaOut.textContent = fmt(p.omega, 'rad/s');
+      periodOut.textContent = fmt(p.period, 's');
+      freqOut.textContent = fmt(p.freq, 'Hz');
+      vmaxOut.textContent = fmt(p.vmax, 'm/s');
+
+      if (p.mode === 'car') {
+        if (p.safe) {
+          statusEl.textContent = 'Safe turn: available friction can provide required centripetal force.';
+          statusEl.className = 'status safe';
+        } else {
+          statusEl.textContent = 'Car skids outward because friction is insufficient.';
+          statusEl.className = 'status danger';
+        }
+      } else {
+        statusEl.textContent = 'Basic Circular Motion: velocity is tangential, acceleration and force are inward.';
+        statusEl.className = 'status';
+      }
+    }
+
+    function drawArrow(x1, y1, x2, y2, color, label, labelDx = 0, labelDy = 0) {
+      const headLen = 14;
+      const a = Math.atan2(y2 - y1, x2 - x1);
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - headLen * Math.cos(a - Math.PI / 6), y2 - headLen * Math.sin(a - Math.PI / 6));
+      ctx.lineTo(x2 - headLen * Math.cos(a + Math.PI / 6), y2 - headLen * Math.sin(a + Math.PI / 6));
+      ctx.closePath();
+      ctx.fill();
+      ctx.font = 'bold 16px Arial';
+      ctx.fillText(label, x2 + labelDx, y2 + labelDy);
+      ctx.restore();
+    }
+
+    function drawCar(x, y, theta, safe) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(theta + Math.PI / 2);
+      ctx.fillStyle = safe ? '#e8f5e9' : '#fff0ee';
+      ctx.strokeStyle = safe ? '#0f9d58' : '#d93025';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.roundRect(-28, -18, 56, 36, 8);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = safe ? '#0f9d58' : '#d93025';
+      ctx.fillRect(-18, -24, 12, 8);
+      ctx.fillRect(6, -24, 12, 8);
+      ctx.fillRect(-18, 16, 12, 8);
+      ctx.fillRect(6, 16, 12, 8);
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 12px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('CAR', 0, 5);
+      ctx.restore();
+    }
+
+    function drawBody(x, y) {
+      ctx.save();
+      ctx.fillStyle = '#d93025';
+      ctx.beginPath();
+      ctx.arc(x, y, 16, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 11px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('m', x, y + 4);
+      ctx.restore();
+    }
+
+    function draw(p) {
+      updateLabels(p);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const cx = canvas.width / 2;
+      const cy = 315;
+      const visualRadius = Math.min(230, Math.max(90, p.r * 3));
+      const x = cx + visualRadius * Math.cos(angle);
+      const y = cy + visualRadius * Math.sin(angle);
+
+      // Background grid
+      ctx.save();
+      ctx.strokeStyle = '#eef3fb';
+      ctx.lineWidth = 1;
+      for (let gx = 0; gx <= canvas.width; gx += 40) {
+        ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, canvas.height); ctx.stroke();
+      }
+      for (let gy = 0; gy <= canvas.height; gy += 40) {
+        ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(canvas.width, gy); ctx.stroke();
+      }
+      ctx.restore();
+
+      // Main title inside canvas
+      ctx.save();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 22px Arial';
+      ctx.fillText(p.mode === 'car' ? 'Car Turning on Level Road' : 'Basic Circular Motion', 28, 38);
+      ctx.font = '15px Arial';
+      ctx.fillStyle = '#637083';
+      ctx.fillText('Observe: velocity tangent, acceleration/force toward centre.', 28, 62);
+      ctx.restore();
+
+      // Circular path / road
+      ctx.save();
+      if (p.mode === 'car') {
+        ctx.strokeStyle = '#b7c3d4';
+        ctx.lineWidth = 42;
+        ctx.beginPath();
+        ctx.arc(cx, cy, visualRadius, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.strokeStyle = '#ffffff';
+        ctx.setLineDash([16, 16]);
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(cx, cy, visualRadius, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      } else {
+        ctx.strokeStyle = '#1769ff';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(cx, cy, visualRadius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // Centre point
+      ctx.save();
+      ctx.fillStyle = '#102033';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.font = 'bold 15px Arial';
+      ctx.fillText('Centre', cx + 12, cy + 5);
+      ctx.restore();
+
+      // Radius line
+      ctx.save();
+      ctx.strokeStyle = '#1769ff';
+      ctx.setLineDash([8, 6]);
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#1769ff';
+      ctx.font = 'bold 16px Arial';
+      ctx.fillText('r', (cx + x) / 2 + 8, (cy + y) / 2 - 8);
+      ctx.restore();
+
+      // Tangent vector: clockwise visual direction
+      const tangent = { x: -Math.sin(angle), y: Math.cos(angle) };
+      const inward = { x: (cx - x) / visualRadius, y: (cy - y) / visualRadius };
+      const outward = { x: -inward.x, y: -inward.y };
+
+      const vLen = Math.min(135, 50 + p.v * 1.8);
+      const aLen = Math.min(145, 50 + p.ac * 4);
+      const fLen = Math.min(145, 50 + Math.sqrt(p.fc) * 4);
+
+      if (p.mode === 'car') {
+        drawCar(x, y, angle, p.safe);
+      } else {
+        drawBody(x, y);
+      }
+
+      drawArrow(x, y, x + tangent.x * vLen, y + tangent.y * vLen, '#0f9d58', 'v tangential', 8, -8);
+      drawArrow(x, y, x + inward.x * aLen, y + inward.y * aLen, '#d93025', 'a = v²/r', 8, 18);
+      drawArrow(x, y, x + inward.x * fLen * 0.72, y + inward.y * fLen * 0.72, '#7b1fa2', 'F = mv²/r', -90, -10);
+
+      if (p.mode === 'car') {
+        drawArrow(x, y, x + inward.x * 115, y + inward.y * 115, '#f57c00', 'friction', 8, -12);
+        if (!p.safe) {
+          drawArrow(x, y, x + outward.x * 120, y + outward.y * 120, '#d93025', 'skid tendency', 8, 18);
+        }
+      }
+
+      // Info panel inside canvas
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.94)';
+      ctx.strokeStyle = '#dbe6f6';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(24, 450, 360, 132, 16);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 17px Arial';
+      ctx.fillText('Live NEET Logic', 44, 480);
+      ctx.font = '15px Arial';
+      ctx.fillText('Velocity: tangent to the circle', 44, 508);
+      ctx.fillText('Acceleration: towards centre', 44, 532);
+      ctx.fillText('Force: net inward force', 44, 556);
+      if (p.mode === 'car') {
+        ctx.fillStyle = p.safe ? '#0f9d58' : '#d93025';
+        ctx.font = 'bold 15px Arial';
+        ctx.fillText(p.safe ? 'Safe: v ≤ vmax' : 'Unsafe: v > vmax', 44, 578);
+      }
+      ctx.restore();
+
+      // Formula panel inside canvas
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.94)';
+      ctx.strokeStyle = '#dbe6f6';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(588, 450, 326, 132, 16);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 17px Arial';
+      ctx.fillText('Important Values', 608, 480);
+      ctx.font = '15px Arial';
+      ctx.fillText(`a = ${p.ac.toFixed(2)} m/s²`, 608, 508);
+      ctx.fillText(`F = ${p.fc.toFixed(2)} N`, 608, 532);
+      ctx.fillText(`ω = ${p.omega.toFixed(2)} rad/s`, 608, 556);
+      ctx.fillText(`vmax = ${p.vmax.toFixed(2)} m/s`, 608, 578);
+      ctx.restore();
+    }
+
+    function tick(timestamp) {
+      const p = getParams();
+      if (lastFrame === null) lastFrame = timestamp;
+      const dt = (timestamp - lastFrame) / 1000;
+      lastFrame = timestamp;
+
+      if (isPlaying) {
+        angle += p.omega * dt;
+        if (angle > Math.PI * 2) angle -= Math.PI * 2;
+      }
+
+      draw(p);
+      animationId = requestAnimationFrame(tick);
+    }
+
+    function resetSimulation() {
+      angle = -Math.PI / 4;
+      lastFrame = null;
+      draw(getParams());
+    }
+
+    playBtn.addEventListener('click', () => {
+      isPlaying = true;
+      lastFrame = null;
+    });
+
+    pauseBtn.addEventListener('click', () => {
+      isPlaying = false;
+    });
+
+    resetBtn.addEventListener('click', () => {
+      isPlaying = false;
+      resetSimulation();
+    });
+
+    [modeEl, massEl, radiusEl, speedEl, muEl, gravityEl].forEach(el => {
+      el.addEventListener('input', () => {
+        draw(getParams());
+      });
+      el.addEventListener('change', () => {
+        draw(getParams());
+      });
+    });
+
+    resetSimulation();
+    animationId = requestAnimationFrame(tick);
+  </script>
+</body>
+</html>

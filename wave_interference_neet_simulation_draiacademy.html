@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEET Physics Simulation: Wave Interference</title>
+  <style>
+    :root {
+      --bg: #f4f8ff;
+      --panel: #ffffff;
+      --ink: #102033;
+      --muted: #637083;
+      --blue: #1769ff;
+      --green: #0f9d58;
+      --orange: #f57c00;
+      --red: #d93025;
+      --purple: #7b1fa2;
+      --cyan: #00a9e8;
+      --line: #dbe6f6;
+      --soft: #f7faff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #eef5ff, #ffffff);
+      color: var(--ink);
+    }
+
+    header {
+      padding: 24px 18px;
+      text-align: center;
+      background: linear-gradient(135deg, #061d49, #0d6efd);
+      color: white;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: clamp(26px, 4vw, 44px);
+      letter-spacing: 0.3px;
+    }
+
+    header p {
+      margin: 0;
+      opacity: 0.94;
+      font-size: 16px;
+    }
+
+    .wrap {
+      max-width: 1220px;
+      margin: 22px auto;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 370px;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 12px 30px rgba(16, 32, 51, 0.08);
+      overflow: hidden;
+    }
+
+    .canvas-card { padding: 14px; }
+
+    canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 14px;
+      background: #ffffff;
+      border: 1px solid #e6eefb;
+      touch-action: none;
+    }
+
+    .controls { padding: 18px; }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 20px;
+    }
+
+    .control {
+      margin-bottom: 16px;
+      padding-bottom: 13px;
+      border-bottom: 1px dashed #d8e3f2;
+    }
+
+    .control:last-of-type {
+      border-bottom: 0;
+      margin-bottom: 12px;
+      padding-bottom: 0;
+    }
+
+    label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    label span {
+      color: var(--blue);
+      white-space: nowrap;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--blue);
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: 0;
+      padding: 11px 10px;
+      border-radius: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      color: white;
+      background: var(--blue);
+      box-shadow: 0 8px 16px rgba(23, 105, 255, 0.2);
+    }
+
+    button:nth-child(2) { background: var(--orange); }
+    button:nth-child(3) { background: var(--red); }
+
+    .hint {
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 12px;
+      background: #eef6ff;
+      border: 1px solid #d8eaff;
+      color: #0b45a0;
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: #f4f7fb;
+      border: 1px solid #dde8f6;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .blue { color: var(--blue); }
+    .green { color: var(--green); }
+    .orange { color: var(--orange); }
+    .red { color: var(--red); }
+    .purple { color: var(--purple); }
+    .cyan { color: var(--cyan); }
+
+    .content-grid {
+      max-width: 1220px;
+      margin: 0 auto 34px;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .data, .formula, .questions, .traps, .explain { padding: 18px; }
+
+    .status {
+      padding: 14px 16px;
+      border-radius: 14px;
+      font-size: 19px;
+      font-weight: 900;
+      margin-bottom: 16px;
+      text-align: center;
+      background: #eef6ff;
+      color: #0b45a0;
+      border: 1px solid #d8eaff;
+    }
+
+    .status.bright {
+      background: #fff8e6;
+      color: #b15d00;
+      border-color: #ffe0a6;
+    }
+
+    .status.dark {
+      background: #f4efff;
+      color: var(--purple);
+      border-color: #dfd1ff;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .stat {
+      background: var(--soft);
+      border: 1px solid #e5eefb;
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .stat b {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
+
+    .stat span {
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .formula p, .questions li, .traps li, .explain li {
+      line-height: 1.58;
+    }
+
+    .formula-box {
+      background: #f8fbff;
+      border: 1px solid #deebff;
+      border-radius: 14px;
+      padding: 14px;
+      margin: 12px 0;
+    }
+
+    .formula-box code {
+      display: block;
+      font-size: 17px;
+      padding: 4px 0;
+      color: #0b45a0;
+      white-space: normal;
+      font-weight: 800;
+    }
+
+    ol, ul { margin: 0; padding-left: 22px; }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      padding: 0 16px 26px;
+      font-size: 14px;
+    }
+
+    @media (max-width: 920px) {
+      .wrap, .content-grid { grid-template-columns: 1fr; }
+      .buttons { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Wave Interference Simulator</h1>
+    <p>NEET Physics Interactive Lab: coherent sources, path difference, phase difference, bright and dark fringes</p>
+  </header>
+
+  <main class="wrap">
+    <section class="card canvas-card">
+      <canvas id="simCanvas" width="940" height="650"></canvas>
+      <div class="legend">
+        <span class="pill blue">Blue circles: wavefronts</span>
+        <span class="pill orange">Orange areas: constructive interference</span>
+        <span class="pill purple">Purple areas: destructive interference</span>
+        <span class="pill red">Red point: movable observation point P</span>
+        <span class="pill green">Green graph: resultant wave</span>
+      </div>
+    </section>
+
+    <aside class="card controls">
+      <h2>Change Variables</h2>
+
+      <div class="control">
+        <label>Wavelength, λ <span id="lambdaVal">60 px</span></label>
+        <input id="lambda" type="range" min="30" max="120" step="2" value="60" />
+      </div>
+
+      <div class="control">
+        <label>Frequency, f <span id="freqVal">2.0 Hz</span></label>
+        <input id="freq" type="range" min="0.5" max="5" step="0.1" value="2" />
+      </div>
+
+      <div class="control">
+        <label>Amplitude, A <span id="ampVal">1.0</span></label>
+        <input id="amp" type="range" min="0.2" max="2" step="0.1" value="1" />
+      </div>
+
+      <div class="control">
+        <label>Source distance, d <span id="sourceVal">140 px</span></label>
+        <input id="sourceDist" type="range" min="50" max="260" step="5" value="140" />
+      </div>
+
+      <div class="control">
+        <label>Phase difference, φ <span id="phaseVal">0°</span></label>
+        <input id="phase" type="range" min="0" max="360" step="5" value="0" />
+      </div>
+
+      <div class="control">
+        <label>Wave speed, v <span id="speedVal">120 px/s</span></label>
+        <input id="speed" type="range" min="30" max="400" step="5" value="120" />
+      </div>
+
+      <div class="buttons">
+        <button id="playBtn">Play</button>
+        <button id="pauseBtn">Pause</button>
+        <button id="resetBtn">Reset</button>
+      </div>
+
+      <div class="hint">Drag point P on the canvas. Observe how path difference changes the bright/dark condition.</div>
+    </aside>
+  </main>
+
+  <section class="content-grid">
+    <section class="card data">
+      <h2>Live Calculations</h2>
+      <div id="status" class="status">Move point P to check constructive or destructive interference.</div>
+      <div class="stats">
+        <div class="stat"><b>Wave speed relation</b><span id="speedOut">--</span></div>
+        <div class="stat"><b>Path S1P</b><span id="s1pOut">--</span></div>
+        <div class="stat"><b>Path S2P</b><span id="s2pOut">--</span></div>
+        <div class="stat"><b>Path difference, Δx</b><span id="pathOut">--</span></div>
+        <div class="stat"><b>Phase due to path, Δφ</b><span id="phaseOut">--</span></div>
+        <div class="stat"><b>Resultant amplitude, R</b><span id="resultOut">--</span></div>
+        <div class="stat"><b>Relative intensity</b><span id="intensityOut">--</span></div>
+        <div class="stat"><b>Nearest condition</b><span id="conditionOut">--</span></div>
+      </div>
+    </section>
+
+    <section class="card formula">
+      <h2>Formula Explanation</h2>
+      <p>Interference happens when two coherent waves meet and combine. Resultant intensity depends on phase difference.</p>
+      <div class="formula-box">
+        <code>Wave speed relation: v = fλ</code>
+        <code>Path difference: Δx = |S2P − S1P|</code>
+        <code>Phase difference: Δφ = 2πΔx / λ</code>
+        <code>Constructive interference: Δx = nλ</code>
+        <code>Destructive interference: Δx = (n + 1/2)λ</code>
+        <code>For equal amplitudes: R = 2A cos(Δφ/2)</code>
+        <code>Intensity relation: I ∝ A²</code>
+      </div>
+      <p><b>NEET key:</b> Bright fringe means maximum resultant intensity. Dark fringe means cancellation due to phase opposition.</p>
+    </section>
+
+    <section class="card explain">
+      <h2>Simple NEET Explanation</h2>
+      <ul>
+        <li>Interference happens when two waves meet and combine.</li>
+        <li>Constructive interference means waves add and intensity becomes maximum.</li>
+        <li>Destructive interference means waves cancel and intensity becomes minimum.</li>
+        <li>Coherent sources have the same frequency and constant phase difference.</li>
+        <li>Bright fringes form where path difference is nλ.</li>
+        <li>Dark fringes form where path difference is (n + 1/2)λ.</li>
+        <li>If wavelength increases, fringe spacing increases.</li>
+        <li>If source distance increases, fringe spacing decreases.</li>
+      </ul>
+    </section>
+
+    <section class="card traps">
+      <h2>NEET Traps</h2>
+      <ul>
+        <li>Interference needs coherent sources.</li>
+        <li>Bright fringe means resultant intensity is maximum, not that only one wave is bright.</li>
+        <li>Dark fringe does not mean no wave reaches there; waves reach but cancel.</li>
+        <li>Path difference and phase difference are related but not the same.</li>
+        <li>Intensity is proportional to square of amplitude, not directly amplitude.</li>
+        <li>Constructive condition is Δx = nλ.</li>
+        <li>Destructive condition is Δx = (n + 1/2)λ.</li>
+        <li>Increasing wavelength increases fringe width.</li>
+        <li>Increasing source separation decreases fringe width.</li>
+        <li>Coherent sources must have constant phase difference.</li>
+      </ul>
+    </section>
+
+    <section class="card questions" style="grid-column: 1 / -1; padding: 18px;">
+      <h2>5 NEET-Style Observation Questions</h2>
+      <ol>
+        <li>What happens to fringe spacing when wavelength is increased?</li>
+        <li>What happens to fringe spacing when distance between sources is increased?</li>
+        <li>At what path difference does constructive interference occur?</li>
+        <li>At what path difference does destructive interference occur?</li>
+        <li>Why are coherent sources necessary for a stable interference pattern?</li>
+      </ol>
+    </section>
+  </section>
+
+  <footer>
+    AI Powered Physics for NEET • Interactive Simulation Lab • Dr AI Academy
+  </footer>
+
+  <script>
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const lambdaEl = document.getElementById('lambda');
+    const freqEl = document.getElementById('freq');
+    const ampEl = document.getElementById('amp');
+    const sourceDistEl = document.getElementById('sourceDist');
+    const phaseEl = document.getElementById('phase');
+    const speedEl = document.getElementById('speed');
+
+    const lambdaVal = document.getElementById('lambdaVal');
+    const freqVal = document.getElementById('freqVal');
+    const ampVal = document.getElementById('ampVal');
+    const sourceVal = document.getElementById('sourceVal');
+    const phaseVal = document.getElementById('phaseVal');
+    const speedVal = document.getElementById('speedVal');
+
+    const statusEl = document.getElementById('status');
+    const speedOut = document.getElementById('speedOut');
+    const s1pOut = document.getElementById('s1pOut');
+    const s2pOut = document.getElementById('s2pOut');
+    const pathOut = document.getElementById('pathOut');
+    const phaseOut = document.getElementById('phaseOut');
+    const resultOut = document.getElementById('resultOut');
+    const intensityOut = document.getElementById('intensityOut');
+    const conditionOut = document.getElementById('conditionOut');
+
+    const playBtn = document.getElementById('playBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    let isPlaying = true;
+    let time = 0;
+    let lastFrame = null;
+    let pPoint = { x: 705, y: 240 };
+    let dragging = false;
+
+    function fmt(num, unit = '') {
+      if (!Number.isFinite(num)) return '--';
+      return `${num.toFixed(2)} ${unit}`.trim();
+    }
+
+    function degToRad(deg) { return deg * Math.PI / 180; }
+
+    function getParams() {
+      const lambda = Number(lambdaEl.value);
+      const freq = Number(freqEl.value);
+      const amp = Number(ampEl.value);
+      const d = Number(sourceDistEl.value);
+      const phaseDeg = Number(phaseEl.value);
+      const phase = degToRad(phaseDeg);
+      const speed = Number(speedEl.value);
+
+      const sx = 250;
+      const cy = 245;
+      const s1 = { x: sx, y: cy - d / 2 };
+      const s2 = { x: sx, y: cy + d / 2 };
+
+      const r1 = Math.hypot(pPoint.x - s1.x, pPoint.y - s1.y);
+      const r2 = Math.hypot(pPoint.x - s2.x, pPoint.y - s2.y);
+      const pathDiff = Math.abs(r2 - r1);
+      const phasePath = (2 * Math.PI * pathDiff) / lambda;
+      const totalPhase = phasePath + phase;
+      const R = 2 * amp * Math.cos(totalPhase / 2);
+      const Rabs = Math.abs(R);
+      const intensity = Rabs * Rabs;
+      const maxIntensity = (2 * amp) * (2 * amp);
+      const relIntensity = maxIntensity > 0 ? intensity / maxIntensity : 0;
+
+      return { lambda, freq, amp, d, phaseDeg, phase, speed, s1, s2, r1, r2, pathDiff, phasePath, totalPhase, R, Rabs, intensity, relIntensity };
+    }
+
+    function updateLabels(p) {
+      lambdaVal.textContent = `${p.lambda} px`;
+      freqVal.textContent = `${p.freq.toFixed(1)} Hz`;
+      ampVal.textContent = p.amp.toFixed(1);
+      sourceVal.textContent = `${p.d} px`;
+      phaseVal.textContent = `${p.phaseDeg}°`;
+      speedVal.textContent = `${p.speed} px/s`;
+
+      speedOut.textContent = `${p.speed.toFixed(0)} px/s`;
+      s1pOut.textContent = fmt(p.r1, 'px');
+      s2pOut.textContent = fmt(p.r2, 'px');
+      pathOut.textContent = fmt(p.pathDiff, 'px');
+      phaseOut.textContent = `${p.phasePath.toFixed(2)} rad`;
+      resultOut.textContent = fmt(p.Rabs, 'units');
+      intensityOut.textContent = `${(p.relIntensity * 100).toFixed(1)}%`;
+
+      const nConstruct = Math.round(p.pathDiff / p.lambda);
+      const constructDiff = Math.abs(p.pathDiff - nConstruct * p.lambda);
+      const nDestruct = Math.round(p.pathDiff / p.lambda - 0.5);
+      const destructTarget = (nDestruct + 0.5) * p.lambda;
+      const destructDiff = Math.abs(p.pathDiff - destructTarget);
+
+      if (p.relIntensity > 0.78) {
+        statusEl.textContent = 'Constructive interference: waves add and intensity is high.';
+        statusEl.className = 'status bright';
+        conditionOut.textContent = `Bright: Δx ≈ ${nConstruct}λ`;
+      } else if (p.relIntensity < 0.12) {
+        statusEl.textContent = 'Destructive interference: waves cancel and intensity is low.';
+        statusEl.className = 'status dark';
+        conditionOut.textContent = `Dark: Δx ≈ (n + 1/2)λ`;
+      } else {
+        statusEl.textContent = 'Partial interference: waves partly add and partly cancel.';
+        statusEl.className = 'status';
+        conditionOut.textContent = constructDiff < destructDiff ? 'Closer to bright' : 'Closer to dark';
+      }
+    }
+
+    function waveValue(x, y, source, p, phaseOffset) {
+      const r = Math.hypot(x - source.x, y - source.y);
+      const k = 2 * Math.PI / p.lambda;
+      const omega = 2 * Math.PI * p.freq;
+      const attenuation = 1 / Math.sqrt(1 + r * 0.015);
+      return p.amp * attenuation * Math.sin(k * r - omega * time + phaseOffset);
+    }
+
+    function drawSource(source, label) {
+      ctx.save();
+      ctx.fillStyle = '#1769ff';
+      ctx.beginPath();
+      ctx.arc(source.x, source.y, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 16px Arial';
+      ctx.fillText(label, source.x - 38, source.y + 5);
+      ctx.restore();
+    }
+
+    function drawWavefronts(source, p, phaseShift = 0) {
+      ctx.save();
+      const omega = 2 * Math.PI * p.freq;
+      const base = ((time * p.speed) + phaseShift) % p.lambda;
+      for (let r = base; r < 530; r += p.lambda) {
+        const alpha = Math.max(0.08, 0.35 - r / 1600);
+        ctx.strokeStyle = `rgba(23, 105, 255, ${alpha})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(source.x, source.y, r, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawPattern(p) {
+      const left = 365;
+      const top = 55;
+      const right = 900;
+      const bottom = 390;
+      const cell = 11;
+
+      ctx.save();
+      for (let x = left; x <= right; x += cell) {
+        for (let y = top; y <= bottom; y += cell) {
+          const w1 = waveValue(x, y, p.s1, p, 0);
+          const w2 = waveValue(x, y, p.s2, p, p.phase);
+          const val = w1 + w2;
+          const intensity = Math.min(1, Math.abs(val) / (2 * p.amp));
+          if (intensity > 0.72) {
+            ctx.fillStyle = `rgba(245, 124, 0, ${0.10 + intensity * 0.22})`;
+          } else if (intensity < 0.12) {
+            ctx.fillStyle = 'rgba(123, 31, 162, 0.10)';
+          } else {
+            ctx.fillStyle = `rgba(0, 169, 232, ${0.025 + intensity * 0.05})`;
+          }
+          ctx.fillRect(x, y, cell, cell);
+        }
+      }
+      ctx.strokeStyle = '#dbe6f6';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(left, top, right - left, bottom - top);
+      ctx.fillStyle = '#637083';
+      ctx.font = 'bold 14px Arial';
+      ctx.fillText('Interference pattern area', left + 12, top + 22);
+      ctx.restore();
+    }
+
+    function drawPointAndPaths(p) {
+      ctx.save();
+      ctx.strokeStyle = '#0f9d58';
+      ctx.setLineDash([6, 6]);
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(p.s1.x, p.s1.y);
+      ctx.lineTo(pPoint.x, pPoint.y);
+      ctx.moveTo(p.s2.x, p.s2.y);
+      ctx.lineTo(pPoint.x, pPoint.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = '#d93025';
+      ctx.beginPath();
+      ctx.arc(pPoint.x, pPoint.y, 11, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 16px Arial';
+      ctx.fillText('P', pPoint.x + 14, pPoint.y - 10);
+      ctx.font = '13px Arial';
+      ctx.fillText('S1P', (p.s1.x + pPoint.x) / 2 - 14, (p.s1.y + pPoint.y) / 2 - 8);
+      ctx.fillText('S2P', (p.s2.x + pPoint.x) / 2 - 14, (p.s2.y + pPoint.y) / 2 + 18);
+      ctx.restore();
+    }
+
+    function drawGraph(p) {
+      const gx = 70;
+      const gy = 455;
+      const gw = 800;
+      const gh = 145;
+      const midY = gy + gh / 2;
+
+      ctx.save();
+      ctx.fillStyle = '#fbfdff';
+      ctx.strokeStyle = '#dbe6f6';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(gx, gy, gw, gh, 14);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.strokeStyle = '#cfdced';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(gx + 15, midY);
+      ctx.lineTo(gx + gw - 15, midY);
+      ctx.stroke();
+
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 15px Arial';
+      ctx.fillText('Waves at Point P: individual waves and resultant', gx + 18, gy + 23);
+
+      const k = 2 * Math.PI / p.lambda;
+      const omega = 2 * Math.PI * p.freq;
+      const phase1 = k * p.r1 - omega * time;
+      const phase2 = k * p.r2 - omega * time + p.phase;
+      const scaleY = gh * 0.22;
+      const steps = 240;
+
+      function plot(color, fn, width) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        ctx.beginPath();
+        for (let i = 0; i <= steps; i++) {
+          const px = gx + 20 + (gw - 40) * i / steps;
+          const t = i / steps * 4 * Math.PI;
+          const val = fn(t);
+          const py = midY - val * scaleY;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+      }
+
+      plot('rgba(23,105,255,0.65)', t => p.amp * Math.sin(t + phase1), 2);
+      plot('rgba(123,31,162,0.65)', t => p.amp * Math.sin(t + phase2), 2);
+      plot('#0f9d58', t => p.amp * Math.sin(t + phase1) + p.amp * Math.sin(t + phase2), 4);
+
+      ctx.fillStyle = '#1769ff';
+      ctx.font = 'bold 13px Arial';
+      ctx.fillText('Wave from S1', gx + 22, gy + gh - 20);
+      ctx.fillStyle = '#7b1fa2';
+      ctx.fillText('Wave from S2', gx + 130, gy + gh - 20);
+      ctx.fillStyle = '#0f9d58';
+      ctx.fillText('Resultant', gx + 240, gy + gh - 20);
+      ctx.restore();
+    }
+
+    function draw(p) {
+      updateLabels(p);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Background grid
+      ctx.save();
+      ctx.strokeStyle = '#eef3fb';
+      ctx.lineWidth = 1;
+      for (let gx = 0; gx <= canvas.width; gx += 40) {
+        ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, canvas.height); ctx.stroke();
+      }
+      for (let gy = 0; gy <= canvas.height; gy += 40) {
+        ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(canvas.width, gy); ctx.stroke();
+      }
+      ctx.restore();
+
+      ctx.save();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 22px Arial';
+      ctx.fillText('Two-Source Wave Interference', 28, 36);
+      ctx.font = '15px Arial';
+      ctx.fillStyle = '#637083';
+      ctx.fillText('Drag point P and observe path difference, phase difference, and intensity.', 28, 60);
+      ctx.restore();
+
+      drawPattern(p);
+      drawWavefronts(p.s1, p, 0);
+      drawWavefronts(p.s2, p, p.phase / (2 * Math.PI) * p.lambda);
+      drawSource(p.s1, 'S1');
+      drawSource(p.s2, 'S2');
+      drawPointAndPaths(p);
+
+      // small source separator line
+      ctx.save();
+      ctx.strokeStyle = '#1769ff';
+      ctx.setLineDash([5, 5]);
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(p.s1.x - 32, p.s1.y);
+      ctx.lineTo(p.s2.x - 32, p.s2.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#1769ff';
+      ctx.font = 'bold 14px Arial';
+      ctx.fillText('d', p.s1.x - 54, (p.s1.y + p.s2.y) / 2 + 5);
+      ctx.restore();
+
+      // mini labels
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.strokeStyle = '#dbe6f6';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(38, 90, 262, 112, 14);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 16px Arial';
+      ctx.fillText('Fringe Meaning', 58, 120);
+      ctx.font = '14px Arial';
+      ctx.fillStyle = '#f57c00';
+      ctx.fillText('Bright: constructive, Δx = nλ', 58, 148);
+      ctx.fillStyle = '#7b1fa2';
+      ctx.fillText('Dark: destructive, Δx = (n + 1/2)λ', 58, 174);
+      ctx.restore();
+
+      drawGraph(p);
+    }
+
+    function tick(timestamp) {
+      if (lastFrame === null) lastFrame = timestamp;
+      const dt = (timestamp - lastFrame) / 1000;
+      lastFrame = timestamp;
+      if (isPlaying) time += dt;
+      draw(getParams());
+      requestAnimationFrame(tick);
+    }
+
+    function canvasPoint(evt) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+      const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+      return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+    }
+
+    function startDrag(evt) {
+      const p = canvasPoint(evt);
+      if (Math.hypot(p.x - pPoint.x, p.y - pPoint.y) < 28) {
+        dragging = true;
+        evt.preventDefault();
+      }
+    }
+
+    function moveDrag(evt) {
+      if (!dragging) return;
+      const p = canvasPoint(evt);
+      pPoint.x = Math.max(380, Math.min(890, p.x));
+      pPoint.y = Math.max(70, Math.min(380, p.y));
+      evt.preventDefault();
+    }
+
+    function endDrag() { dragging = false; }
+
+    playBtn.addEventListener('click', () => {
+      isPlaying = true;
+      lastFrame = null;
+    });
+
+    pauseBtn.addEventListener('click', () => {
+      isPlaying = false;
+    });
+
+    resetBtn.addEventListener('click', () => {
+      isPlaying = false;
+      time = 0;
+      pPoint = { x: 705, y: 240 };
+      draw(getParams());
+    });
+
+    [lambdaEl, freqEl, ampEl, sourceDistEl, phaseEl, speedEl].forEach(el => {
+      el.addEventListener('input', () => draw(getParams()));
+    });
+
+    canvas.addEventListener('mousedown', startDrag);
+    canvas.addEventListener('mousemove', moveDrag);
+    window.addEventListener('mouseup', endDrag);
+    canvas.addEventListener('touchstart', startDrag, { passive: false });
+    canvas.addEventListener('touchmove', moveDrag, { passive: false });
+    window.addEventListener('touchend', endDrag);
+
+    draw(getParams());
+    requestAnimationFrame(tick);
+  </script>
+</body>
+</html>

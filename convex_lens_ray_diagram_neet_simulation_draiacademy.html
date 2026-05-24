@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEET Physics Simulation: Convex Lens Ray Diagram</title>
+  <style>
+    :root {
+      --bg: #f4f8ff;
+      --panel: #ffffff;
+      --ink: #102033;
+      --muted: #637083;
+      --blue: #1769ff;
+      --green: #0f9d58;
+      --orange: #f57c00;
+      --red: #d93025;
+      --purple: #7b1fa2;
+      --cyan: #00a9e8;
+      --line: #dbe6f6;
+      --soft: #f7faff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #eef5ff, #ffffff);
+      color: var(--ink);
+    }
+
+    header {
+      padding: 24px 18px;
+      text-align: center;
+      background: linear-gradient(135deg, #061d49, #0d6efd);
+      color: white;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: clamp(26px, 4vw, 44px);
+      letter-spacing: 0.3px;
+    }
+
+    header p {
+      margin: 0;
+      opacity: 0.94;
+      font-size: 16px;
+    }
+
+    .wrap {
+      max-width: 1220px;
+      margin: 22px auto;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 370px;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 12px 30px rgba(16, 32, 51, 0.08);
+      overflow: hidden;
+    }
+
+    .canvas-card { padding: 14px; }
+
+    canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 14px;
+      background: #ffffff;
+      border: 1px solid #e6eefb;
+    }
+
+    .controls { padding: 18px; }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 20px;
+    }
+
+    .control {
+      margin-bottom: 17px;
+      padding-bottom: 14px;
+      border-bottom: 1px dashed #d8e3f2;
+    }
+
+    .control:last-of-type {
+      border-bottom: 0;
+      margin-bottom: 12px;
+      padding-bottom: 0;
+    }
+
+    label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    label span {
+      color: var(--blue);
+      white-space: nowrap;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--blue);
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: 0;
+      padding: 11px 10px;
+      border-radius: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      color: white;
+      background: var(--blue);
+      box-shadow: 0 8px 16px rgba(23, 105, 255, 0.2);
+    }
+
+    button:nth-child(2) { background: var(--orange); }
+    button:nth-child(3) { background: var(--red); }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: #f4f7fb;
+      border: 1px solid #dde8f6;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .blue { color: var(--blue); }
+    .green { color: var(--green); }
+    .orange { color: var(--orange); }
+    .red { color: var(--red); }
+    .purple { color: var(--purple); }
+    .cyan { color: var(--cyan); }
+
+    .content-grid {
+      max-width: 1220px;
+      margin: 0 auto 34px;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .data, .formula, .questions, .traps, .explain { padding: 18px; }
+
+    .status {
+      padding: 14px 16px;
+      border-radius: 14px;
+      font-size: 19px;
+      font-weight: 900;
+      margin-bottom: 16px;
+      text-align: center;
+      background: #eef6ff;
+      color: #0b45a0;
+      border: 1px solid #d8eaff;
+    }
+
+    .status.real {
+      background: #eaf7ee;
+      color: var(--green);
+      border-color: #cdebd6;
+    }
+
+    .status.virtual {
+      background: #f4efff;
+      color: var(--purple);
+      border-color: #dfd1ff;
+    }
+
+    .status.infinity {
+      background: #fff8e6;
+      color: #b15d00;
+      border-color: #ffe0a6;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .stat {
+      background: var(--soft);
+      border: 1px solid #e5eefb;
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .stat b {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
+
+    .stat span {
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .formula p, .questions li, .traps li, .explain li {
+      line-height: 1.58;
+    }
+
+    .formula-box {
+      background: #f8fbff;
+      border: 1px solid #deebff;
+      border-radius: 14px;
+      padding: 14px;
+      margin: 12px 0;
+    }
+
+    .formula-box code {
+      display: block;
+      font-size: 17px;
+      padding: 4px 0;
+      color: #0b45a0;
+      white-space: normal;
+      font-weight: 800;
+    }
+
+    ol, ul { margin: 0; padding-left: 22px; }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      padding: 0 16px 26px;
+      font-size: 14px;
+    }
+
+    @media (max-width: 920px) {
+      .wrap, .content-grid { grid-template-columns: 1fr; }
+      .buttons { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Convex Lens Ray Diagram Simulator</h1>
+    <p>NEET Physics Interactive Lab: image formation, sign convention, magnification, real and virtual images</p>
+  </header>
+
+  <main class="wrap">
+    <section class="card canvas-card">
+      <canvas id="simCanvas" width="940" height="620"></canvas>
+      <div class="legend">
+        <span class="pill blue">Blue: ray parallel then through focus</span>
+        <span class="pill green">Green: ray through optical center</span>
+        <span class="pill orange">Orange: ray through focus then parallel</span>
+        <span class="pill purple">Dotted: virtual/backward extension</span>
+        <span class="pill red">Red: image arrow</span>
+      </div>
+    </section>
+
+    <aside class="card controls">
+      <h2>Change Variables</h2>
+
+      <div class="control">
+        <label>Object distance, u <span id="uVal">30 cm</span></label>
+        <input id="u" type="range" min="6" max="80" step="1" value="30" />
+      </div>
+
+      <div class="control">
+        <label>Focal length, f <span id="fVal">15 cm</span></label>
+        <input id="f" type="range" min="5" max="35" step="1" value="15" />
+      </div>
+
+      <div class="control">
+        <label>Object height, h <span id="hVal">8 cm</span></label>
+        <input id="h" type="range" min="3" max="18" step="1" value="8" />
+      </div>
+
+      <div class="control">
+        <label>Lens size <span id="lensVal">170 px</span></label>
+        <input id="lensSize" type="range" min="100" max="260" step="5" value="170" />
+      </div>
+
+      <div class="control">
+        <label>Scale / zoom <span id="zoomVal">7 px/cm</span></label>
+        <input id="zoom" type="range" min="4" max="12" step="0.5" value="7" />
+      </div>
+
+      <div class="buttons">
+        <button id="playBtn">Play</button>
+        <button id="pauseBtn">Pause</button>
+        <button id="resetBtn">Reset</button>
+      </div>
+    </aside>
+  </main>
+
+  <section class="content-grid">
+    <section class="card data">
+      <h2>Live Calculations</h2>
+      <div id="status" class="status">Move sliders to observe image formation.</div>
+      <div class="stats">
+        <div class="stat"><b>Lens formula</b><span id="formulaOut">--</span></div>
+        <div class="stat"><b>Image distance, v</b><span id="vOut">--</span></div>
+        <div class="stat"><b>Magnification, m</b><span id="mOut">--</span></div>
+        <div class="stat"><b>Image height, h'</b><span id="hiOut">--</span></div>
+        <div class="stat"><b>Nature</b><span id="natureOut">--</span></div>
+        <div class="stat"><b>Orientation</b><span id="orientOut">--</span></div>
+        <div class="stat"><b>Size</b><span id="sizeOut">--</span></div>
+        <div class="stat"><b>Position</b><span id="positionOut">--</span></div>
+      </div>
+    </section>
+
+    <section class="card formula">
+      <h2>Formula Explanation</h2>
+      <p>Convex lens is a converging lens. Use Cartesian sign convention carefully in NEET numericals.</p>
+      <div class="formula-box">
+        <code>Lens formula: 1/f = 1/v − 1/u</code>
+        <code>Magnification: m = v/u = h'/h</code>
+        <code>Power of lens: P = 1/f in metre</code>
+        <code>For convex lens, focal length f is positive.</code>
+        <code>Object distance is usually negative: u = −object distance.</code>
+        <code>Real image: opposite side of lens.</code>
+        <code>Virtual image: same side as object.</code>
+      </div>
+      <p><b>NEET key:</b> Convex lens does not always form a real image. If the object is between F and O, image is virtual, erect, and magnified.</p>
+    </section>
+
+    <section class="card explain">
+      <h2>Simple NEET Explanation</h2>
+      <ul>
+        <li>Convex lens is a converging lens.</li>
+        <li>A ray parallel to principal axis passes through focus after refraction.</li>
+        <li>A ray through optical center goes straight without deviation.</li>
+        <li>A ray passing through focus becomes parallel to principal axis after refraction.</li>
+        <li>If object is beyond 2F, image forms between F and 2F and is diminished.</li>
+        <li>If object is at 2F, image forms at 2F and is same size.</li>
+        <li>If object is between F and 2F, image forms beyond 2F and is magnified.</li>
+        <li>If object is at F, image forms at infinity.</li>
+        <li>If object is between F and optical center, image is virtual, erect, and magnified.</li>
+      </ul>
+    </section>
+
+    <section class="card traps">
+      <h2>NEET Traps</h2>
+      <ul>
+        <li>Convex lens does not always form a real image.</li>
+        <li>If object is between F and O, image is virtual and erect.</li>
+        <li>Ray through optical center does not bend.</li>
+        <li>Real image is inverted; virtual image is erect.</li>
+        <li>For convex lens, focal length is positive.</li>
+        <li>Use sign convention carefully in numerical problems.</li>
+        <li>Magnification sign tells image orientation.</li>
+        <li>Object at focus gives image at infinity.</li>
+        <li>Object at 2F gives image at 2F with same size.</li>
+        <li>Power formula requires focal length in metre, not centimetre.</li>
+      </ul>
+    </section>
+
+    <section class="card questions" style="grid-column: 1 / -1; padding: 18px;">
+      <h2>5 NEET-Style Observation Questions</h2>
+      <ol>
+        <li>What type of image is formed when object is beyond 2F?</li>
+        <li>What happens to image size when object moves from beyond 2F to between F and 2F?</li>
+        <li>Where is the image formed when object is placed at 2F?</li>
+        <li>Why does a ray through optical center pass undeviated?</li>
+        <li>When does a convex lens form a virtual image?</li>
+      </ol>
+    </section>
+  </section>
+
+  <footer>
+    AI Powered Physics for NEET • Interactive Simulation Lab • Dr AI Academy
+  </footer>
+
+  <script>
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const uEl = document.getElementById('u');
+    const fEl = document.getElementById('f');
+    const hEl = document.getElementById('h');
+    const lensSizeEl = document.getElementById('lensSize');
+    const zoomEl = document.getElementById('zoom');
+
+    const uVal = document.getElementById('uVal');
+    const fVal = document.getElementById('fVal');
+    const hVal = document.getElementById('hVal');
+    const lensVal = document.getElementById('lensVal');
+    const zoomVal = document.getElementById('zoomVal');
+
+    const statusEl = document.getElementById('status');
+    const formulaOut = document.getElementById('formulaOut');
+    const vOut = document.getElementById('vOut');
+    const mOut = document.getElementById('mOut');
+    const hiOut = document.getElementById('hiOut');
+    const natureOut = document.getElementById('natureOut');
+    const orientOut = document.getElementById('orientOut');
+    const sizeOut = document.getElementById('sizeOut');
+    const positionOut = document.getElementById('positionOut');
+
+    const playBtn = document.getElementById('playBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    let animated = true;
+    let rayProgress = 1;
+    let lastFrame = null;
+
+    function fmt(num, unit = '') {
+      if (!Number.isFinite(num)) return '∞';
+      return `${num.toFixed(2)} ${unit}`.trim();
+    }
+
+    function getParams() {
+      const objectDistancePositive = Number(uEl.value);
+      const u = -objectDistancePositive;
+      const f = Number(fEl.value);
+      const h = Number(hEl.value);
+      const lensSize = Number(lensSizeEl.value);
+      const zoom = Number(zoomEl.value);
+
+      const denom = (1 / f) + (1 / u); // since 1/v = 1/f + 1/u from 1/f = 1/v - 1/u
+      let v = Math.abs(denom) < 1e-6 ? Infinity : 1 / denom;
+      const m = Number.isFinite(v) ? v / u : Infinity;
+      const hi = Number.isFinite(m) ? m * h : Infinity;
+
+      const isInfinity = !Number.isFinite(v) || Math.abs(objectDistancePositive - f) < 0.35;
+      const isReal = Number.isFinite(v) && v > 0;
+      const isVirtual = Number.isFinite(v) && v < 0;
+      const orientation = isInfinity ? 'Image at infinity' : (hi < 0 ? 'Inverted' : 'Erect');
+      const nature = isInfinity ? 'At infinity' : (isReal ? 'Real' : 'Virtual');
+
+      let size = 'Same size';
+      if (isInfinity) size = 'Highly enlarged';
+      else if (Math.abs(Math.abs(m) - 1) < 0.08) size = 'Same size';
+      else if (Math.abs(m) > 1) size = 'Magnified';
+      else size = 'Diminished';
+
+      let position = '';
+      if (isInfinity) position = 'At infinity';
+      else if (isVirtual) position = 'Same side as object';
+      else if (Math.abs(objectDistancePositive - 2 * f) < 0.7) position = 'At 2F2';
+      else if (objectDistancePositive > 2 * f) position = 'Between F2 and 2F2';
+      else if (objectDistancePositive > f && objectDistancePositive < 2 * f) position = 'Beyond 2F2';
+      else position = 'Opposite side of lens';
+
+      const power = 100 / f; // f in cm, P = 1/f(m) = 100/f(cm)
+      return { objectDistancePositive, u, f, h, lensSize, zoom, v, m, hi, isInfinity, isReal, isVirtual, orientation, nature, size, position, power };
+    }
+
+    function updateLabels(p) {
+      uVal.textContent = `${p.objectDistancePositive} cm`;
+      fVal.textContent = `${p.f} cm`;
+      hVal.textContent = `${p.h} cm`;
+      lensVal.textContent = `${p.lensSize} px`;
+      zoomVal.textContent = `${p.zoom} px/cm`;
+
+      formulaOut.textContent = '1/f = 1/v − 1/u';
+      vOut.textContent = p.isInfinity ? '∞' : fmt(p.v, 'cm');
+      mOut.textContent = p.isInfinity ? '∞' : p.m.toFixed(2);
+      hiOut.textContent = p.isInfinity ? '∞' : fmt(p.hi, 'cm');
+      natureOut.textContent = p.nature;
+      orientOut.textContent = p.orientation;
+      sizeOut.textContent = p.size;
+      positionOut.textContent = p.position;
+
+      if (p.isInfinity) {
+        statusEl.textContent = 'Object at focus: refracted rays become parallel, image forms at infinity.';
+        statusEl.className = 'status infinity';
+      } else if (p.isReal) {
+        statusEl.textContent = 'Real image: formed on the opposite side of the lens and inverted.';
+        statusEl.className = 'status real';
+      } else {
+        statusEl.textContent = 'Virtual image: formed on the same side as object, erect and magnified.';
+        statusEl.className = 'status virtual';
+      }
+    }
+
+    function drawArrowLine(x1, y1, x2, y2, color, dotted = false, label = '', labelDx = 0, labelDy = 0, progress = 1) {
+      const px2 = x1 + (x2 - x1) * progress;
+      const py2 = y1 + (y2 - y1) * progress;
+      const headLen = 11;
+      const a = Math.atan2(py2 - y1, px2 - x1);
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 3;
+      if (dotted) ctx.setLineDash([7, 7]);
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(px2, py2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      if (progress > 0.92 && Math.hypot(px2 - x1, py2 - y1) > 22) {
+        ctx.beginPath();
+        ctx.moveTo(px2, py2);
+        ctx.lineTo(px2 - headLen * Math.cos(a - Math.PI / 6), py2 - headLen * Math.sin(a - Math.PI / 6));
+        ctx.lineTo(px2 - headLen * Math.cos(a + Math.PI / 6), py2 - headLen * Math.sin(a + Math.PI / 6));
+        ctx.closePath();
+        ctx.fill();
+      }
+      if (label) {
+        ctx.font = 'bold 13px Arial';
+        ctx.fillText(label, px2 + labelDx, py2 + labelDy);
+      }
+      ctx.restore();
+    }
+
+    function drawArrowObject(x, axisY, heightPx, color, label) {
+      const yTop = axisY - heightPx;
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(x, axisY);
+      ctx.lineTo(x, yTop);
+      ctx.stroke();
+      const dir = heightPx >= 0 ? -1 : 1;
+      ctx.beginPath();
+      ctx.moveTo(x, yTop);
+      ctx.lineTo(x - 10, yTop + dir * 18);
+      ctx.lineTo(x + 10, yTop + dir * 18);
+      ctx.closePath();
+      ctx.fill();
+      ctx.font = 'bold 15px Arial';
+      ctx.fillText(label, x - 20, yTop + (heightPx >= 0 ? -12 : 24));
+      ctx.restore();
+    }
+
+    function drawLens(cx, cy, lensSize) {
+      const h = lensSize / 2;
+      ctx.save();
+      const grad = ctx.createLinearGradient(cx - 35, cy, cx + 35, cy);
+      grad.addColorStop(0, 'rgba(0,169,232,0.08)');
+      grad.addColorStop(0.5, 'rgba(23,105,255,0.22)');
+      grad.addColorStop(1, 'rgba(0,169,232,0.08)');
+      ctx.fillStyle = grad;
+      ctx.strokeStyle = '#1769ff';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - h);
+      ctx.bezierCurveTo(cx + 48, cy - h * 0.55, cx + 48, cy + h * 0.55, cx, cy + h);
+      ctx.bezierCurveTo(cx - 48, cy + h * 0.55, cx - 48, cy - h * 0.55, cx, cy - h);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 15px Arial';
+      ctx.fillText('Convex lens', cx - 40, cy - h - 12);
+      ctx.fillText('O', cx + 10, cy - 10);
+      ctx.restore();
+    }
+
+    function drawMark(x, y, label, color = '#102033') {
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x, y - 8);
+      ctx.lineTo(x, y + 8);
+      ctx.stroke();
+      ctx.font = 'bold 14px Arial';
+      ctx.fillText(label, x - 12, y + 26);
+      ctx.restore();
+    }
+
+    function clampPoint(x, y, minX, maxX) {
+      if (!Number.isFinite(x) || !Number.isFinite(y)) return { x: maxX, y };
+      return { x: Math.max(minX, Math.min(maxX, x)), y };
+    }
+
+    function draw(p) {
+      updateLabels(p);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Background grid
+      ctx.save();
+      ctx.strokeStyle = '#eef3fb';
+      ctx.lineWidth = 1;
+      for (let gx = 0; gx <= canvas.width; gx += 40) {
+        ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, canvas.height); ctx.stroke();
+      }
+      for (let gy = 0; gy <= canvas.height; gy += 40) {
+        ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(canvas.width, gy); ctx.stroke();
+      }
+      ctx.restore();
+
+      const cx = canvas.width / 2;
+      const axisY = 310;
+      const scale = p.zoom;
+      const leftBound = 40;
+      const rightBound = 900;
+      const objectX = cx - p.objectDistancePositive * scale;
+      const objectHPx = p.h * scale;
+      const imageX = p.isInfinity ? rightBound : cx + p.v * scale;
+      const imageHPx = p.isInfinity ? -120 : p.hi * scale;
+      const objTop = { x: objectX, y: axisY - objectHPx };
+      const imgTop = { x: imageX, y: axisY - imageHPx };
+
+      // Title inside canvas
+      ctx.save();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 22px Arial';
+      ctx.fillText('Convex Lens Ray Diagram', 28, 38);
+      ctx.font = '15px Arial';
+      ctx.fillStyle = '#637083';
+      ctx.fillText('Solid rays = real rays. Dotted rays = backward extension for virtual image.', 28, 62);
+      ctx.restore();
+
+      // Principal axis
+      ctx.save();
+      ctx.strokeStyle = '#102033';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(leftBound, axisY);
+      ctx.lineTo(rightBound, axisY);
+      ctx.stroke();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 14px Arial';
+      ctx.fillText('Principal axis', rightBound - 115, axisY - 12);
+      ctx.restore();
+
+      // Lens and marks
+      drawLens(cx, axisY, p.lensSize);
+      const fPx = p.f * scale;
+      drawMark(cx - fPx, axisY, 'F1', '#1769ff');
+      drawMark(cx + fPx, axisY, 'F2', '#1769ff');
+      drawMark(cx - 2 * fPx, axisY, '2F1', '#7b1fa2');
+      drawMark(cx + 2 * fPx, axisY, '2F2', '#7b1fa2');
+
+      // Object
+      drawArrowObject(objectX, axisY, objectHPx, '#102033', 'Object');
+
+      // Image
+      if (!p.isInfinity) {
+        const visibleImageX = Math.max(leftBound + 15, Math.min(rightBound - 15, imageX));
+        const visibleHPx = Math.max(-180, Math.min(180, imageHPx));
+        drawArrowObject(visibleImageX, axisY, visibleHPx, '#d93025', 'Image');
+      } else {
+        ctx.save();
+        ctx.fillStyle = '#f57c00';
+        ctx.font = 'bold 16px Arial';
+        ctx.fillText('Image at infinity: refracted rays become parallel', 535, 94);
+        ctx.restore();
+      }
+
+      const progress = animated ? rayProgress : 1;
+
+      // Ray 1: parallel to axis, then through F2 or appears through F1 for virtual case.
+      const lensPoint1 = { x: cx, y: objTop.y };
+      drawArrowLine(objTop.x, objTop.y, lensPoint1.x, lensPoint1.y, '#1769ff', false, 'parallel ray', -78, -8, progress);
+
+      if (p.isInfinity) {
+        const yEnd = lensPoint1.y;
+        drawArrowLine(cx, lensPoint1.y, rightBound, yEnd, '#1769ff', false, '', 0, 0, progress);
+      } else if (p.isReal) {
+        const end = clampPoint(imgTop.x, imgTop.y, cx, rightBound);
+        drawArrowLine(cx, lensPoint1.y, end.x, end.y, '#1769ff', false, '', 0, 0, progress);
+      } else {
+        const rightEnd = { x: rightBound, y: lensPoint1.y + (lensPoint1.y - axisY) * 0.12 };
+        drawArrowLine(cx, lensPoint1.y, rightEnd.x, rightEnd.y, '#1769ff', false, '', 0, 0, progress);
+        drawArrowLine(cx, lensPoint1.y, imgTop.x, imgTop.y, '#7b1fa2', true, 'back extension', -105, -8, progress);
+      }
+
+      // Ray 2: through optical center, undeviated.
+      if (p.isInfinity) {
+        const slope = (objTop.y - axisY) / (objTop.x - cx);
+        const xEnd = rightBound;
+        const yEnd = axisY + slope * (xEnd - cx);
+        drawArrowLine(objTop.x, objTop.y, xEnd, yEnd, '#0f9d58', false, 'through O', 8, -8, progress);
+      } else {
+        const end2 = clampPoint(imgTop.x, imgTop.y, leftBound, rightBound);
+        drawArrowLine(objTop.x, objTop.y, end2.x, end2.y, '#0f9d58', false, 'through O', 8, -8, progress);
+        if (p.isVirtual) {
+          drawArrowLine(cx, axisY, imgTop.x, imgTop.y, '#7b1fa2', true, '', 0, 0, progress);
+        }
+      }
+
+      // Ray 3: through F1 then parallel to principal axis after lens.
+      const F1 = { x: cx - fPx, y: axisY };
+      const slopeToF1 = (F1.y - objTop.y) / (F1.x - objTop.x);
+      const yAtLens = objTop.y + slopeToF1 * (cx - objTop.x);
+      if (Math.abs(p.objectDistancePositive - p.f) > 0.6 && F1.x > objTop.x) {
+        drawArrowLine(objTop.x, objTop.y, cx, yAtLens, '#f57c00', false, 'through F1', -75, 16, progress);
+        if (p.isReal) {
+          const end3 = clampPoint(imgTop.x, yAtLens, cx, rightBound);
+          drawArrowLine(cx, yAtLens, end3.x, yAtLens, '#f57c00', false, 'parallel', 8, -8, progress);
+        } else if (p.isVirtual) {
+          drawArrowLine(cx, yAtLens, rightBound, yAtLens, '#f57c00', false, 'parallel', 8, -8, progress);
+          drawArrowLine(cx, yAtLens, imgTop.x, imgTop.y, '#7b1fa2', true, '', 0, 0, progress);
+        }
+      }
+
+      // Information card inside canvas
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.strokeStyle = '#dbe6f6';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(38, 430, 405, 142, 16);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 17px Arial';
+      ctx.fillText('Live Image Formation', 58, 460);
+      ctx.font = '15px Arial';
+      ctx.fillText(`u = ${p.u.toFixed(1)} cm, f = +${p.f.toFixed(1)} cm`, 58, 488);
+      ctx.fillText(`v = ${p.isInfinity ? '∞' : p.v.toFixed(2) + ' cm'}, m = ${p.isInfinity ? '∞' : p.m.toFixed(2)}`, 58, 512);
+      ctx.fillText(`Nature: ${p.nature}, ${p.orientation}`, 58, 536);
+      ctx.fillText(`Position: ${p.position}`, 58, 560);
+      ctx.restore();
+
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.strokeStyle = '#dbe6f6';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(535, 430, 350, 142, 16);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 17px Arial';
+      ctx.fillText('Ray Rules', 555, 460);
+      ctx.font = '15px Arial';
+      ctx.fillText('1. Parallel ray passes through focus.', 555, 488);
+      ctx.fillText('2. Ray through O goes undeviated.', 555, 512);
+      ctx.fillText('3. Ray through F becomes parallel.', 555, 536);
+      ctx.fillText(`Power P = ${p.power.toFixed(2)} D`, 555, 560);
+      ctx.restore();
+    }
+
+    function tick(timestamp) {
+      if (lastFrame === null) lastFrame = timestamp;
+      const dt = (timestamp - lastFrame) / 1000;
+      lastFrame = timestamp;
+      if (animated) {
+        rayProgress += dt * 0.65;
+        if (rayProgress > 1) rayProgress = 1;
+      }
+      draw(getParams());
+      requestAnimationFrame(tick);
+    }
+
+    function resetSimulation() {
+      rayProgress = 0;
+      lastFrame = null;
+      draw(getParams());
+    }
+
+    playBtn.addEventListener('click', () => {
+      animated = true;
+      if (rayProgress >= 1) rayProgress = 0;
+      lastFrame = null;
+    });
+
+    pauseBtn.addEventListener('click', () => {
+      animated = false;
+    });
+
+    resetBtn.addEventListener('click', () => {
+      animated = false;
+      rayProgress = 0;
+      draw(getParams());
+    });
+
+    [uEl, fEl, hEl, lensSizeEl, zoomEl].forEach(el => {
+      el.addEventListener('input', resetSimulation);
+    });
+
+    resetSimulation();
+    requestAnimationFrame(tick);
+  </script>
+</body>
+</html>
