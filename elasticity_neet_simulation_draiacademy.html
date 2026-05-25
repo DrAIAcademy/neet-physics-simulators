@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEET Physics Simulation: Elasticity</title>
+  <style>
+    :root{
+      --panel:#ffffff;--ink:#102033;--muted:#637083;--blue:#1769ff;--green:#0f9d58;
+      --orange:#f57c00;--red:#d93025;--purple:#7b1fa2;--line:#dbe6f6;--soft:#f7faff;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(135deg,#eef5ff,#fff);color:var(--ink)}
+    header{padding:24px 18px;text-align:center;background:linear-gradient(135deg,#061d49,#0d6efd);color:white}
+    header h1{margin:0 0 8px;font-size:clamp(26px,4vw,44px)} header p{margin:0;opacity:.94;font-size:16px}
+    .wrap{max-width:1240px;margin:22px auto;padding:0 16px;display:grid;grid-template-columns:1fr 390px;gap:18px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:0 12px 30px rgba(16,32,51,.08);overflow:hidden}
+    .canvas-card{padding:14px;position:relative}
+    canvas{width:100%;height:auto;display:block;border-radius:14px;background:#fff;border:1px solid #e6eefb;cursor:crosshair}
+    #tooltip{position:absolute;display:none;pointer-events:none;max-width:285px;padding:10px 12px;border-radius:12px;background:rgba(16,32,51,.96);color:#fff;font-size:13px;line-height:1.42;box-shadow:0 10px 24px rgba(16,32,51,.28);z-index:5}
+    .controls{padding:18px} h2{margin:0 0 14px;font-size:20px}
+    .mode-box{margin-bottom:16px;padding:12px;background:#f7faff;border:1px solid #e5eefb;border-radius:14px}
+    .control{margin-bottom:14px;padding-bottom:11px;border-bottom:1px dashed #d8e3f2}.control:last-of-type{border-bottom:0;margin-bottom:12px;padding-bottom:0}
+    label{display:flex;justify-content:space-between;gap:12px;align-items:center;font-weight:800;margin-bottom:8px} label span{color:var(--blue);white-space:nowrap}
+    input[type="range"],select{width:100%;accent-color:var(--blue)}
+    select{padding:10px 12px;border-radius:12px;border:1px solid #cbd9ec;background:#fff;color:var(--ink);font-weight:800;font-size:15px}
+    .toggle-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+    .toggle{display:flex;align-items:center;gap:8px;background:#f7faff;border:1px solid #e5eefb;border-radius:12px;padding:9px 10px;font-weight:800;font-size:13px}
+    .buttons{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:14px}
+    button{border:0;padding:11px 10px;border-radius:12px;font-weight:900;cursor:pointer;color:#fff;background:var(--blue);box-shadow:0 8px 16px rgba(23,105,255,.2)}
+    button:nth-child(2){background:var(--orange)}button:nth-child(3){background:var(--red)}button:nth-child(4){background:var(--green)}button:nth-child(5){background:var(--purple);grid-column:1/-1}
+    .hint{margin-top:12px;padding:10px;border-radius:12px;background:#eef6ff;border:1px solid #d8eaff;color:#0b45a0;font-size:13px;line-height:1.45;font-weight:700}
+    .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.pill{border-radius:999px;padding:7px 10px;background:#f4f7fb;border:1px solid #dde8f6;font-size:13px;font-weight:800}
+    .content-grid{max-width:1240px;margin:0 auto 34px;padding:0 16px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .data,.formula,.questions,.traps,.explain{padding:18px}.status{padding:14px 16px;border-radius:14px;font-size:18px;font-weight:900;margin-bottom:16px;text-align:center;background:#eef6ff;color:#0b45a0;border:1px solid #d8eaff}
+    .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:var(--soft);border:1px solid #e5eefb;border-radius:14px;padding:12px}.stat b{display:block;color:var(--muted);font-size:13px;margin-bottom:5px}.stat span{font-size:17px;font-weight:900}
+    .formula p,.questions li,.traps li,.explain li{line-height:1.58}.formula-box{background:#f8fbff;border:1px solid #deebff;border-radius:14px;padding:14px;margin:12px 0;display:block}.formula-box.hidden{display:none}.formula-box code{display:block;font-size:17px;padding:4px 0;color:#0b45a0;font-weight:800}ol,ul{margin:0;padding-left:22px}
+    footer{text-align:center;color:var(--muted);padding:0 16px 26px;font-size:14px} footer a{color:#0b45a0;font-weight:900;text-decoration:none} footer a:hover{text-decoration:underline}
+    @media(max-width:940px){.wrap,.content-grid{grid-template-columns:1fr}.buttons{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<header><h1>Elasticity Simulator</h1><p>NEET Physics Interactive Lab: stress, strain, Young’s modulus, Hooke’s law, elastic limit, force-extension graph, and energy stored</p></header>
+
+<main class="wrap">
+  <section class="card canvas-card">
+    <canvas id="simCanvas" width="960" height="760"></canvas>
+    <div id="tooltip"></div>
+    <div class="legend">
+      <span class="pill">Blue: elastic body</span><span class="pill">Green: applied force</span><span class="pill">Orange: extension</span><span class="pill">Purple: graph/energy</span><span class="pill">Red: limit warning</span>
+    </div>
+  </section>
+
+  <aside class="card controls"><h2>Controls</h2>
+    <div class="mode-box"><label>Mode</label><select id="mode"><option value="wire" selected>Wire extension</option><option value="hooke">Hooke's law spring</option><option value="stressStrain">Stress-strain curve</option><option value="materials">Compare materials</option></select></div>
+    <div class="control"><label>Material <span id="materialVal">Steel</span></label><select id="material"><option value="steel">Steel</option><option value="copper">Copper</option><option value="rubber">Rubber</option><option value="glass">Glass</option></select></div>
+    <div class="control"><label>Force, F <span id="forceVal">500 N</span></label><input id="force" type="range" min="0" max="5000" step="50" value="500"></div>
+    <div class="control"><label>Original length, L <span id="lengthVal">2.0 m</span></label><input id="length" type="range" min="0.5" max="5" step="0.1" value="2"></div>
+    <div class="control"><label>Radius, r <span id="radiusVal">1.0 mm</span></label><input id="radius" type="range" min="0.2" max="5" step="0.1" value="1"></div>
+    <div class="control"><label>Spring constant, k <span id="kVal">200 N/m</span></label><input id="springK" type="range" min="20" max="1000" step="20" value="200"></div>
+    <div class="control"><label>Load animation <span id="speedVal">1.0×</span></label><input id="animSpeed" type="range" min="0.3" max="3" step="0.1" value="1"></div>
+    <div class="toggle-row"><label class="toggle"><input id="showForces" type="checkbox" checked> Forces</label><label class="toggle"><input id="showGraph" type="checkbox" checked> Graph</label><label class="toggle"><input id="showFormula" type="checkbox" checked> Formulas</label><label class="toggle"><input id="showTooltips" type="checkbox" checked> Hover info</label></div>
+    <div class="buttons"><button id="playBtn">Play</button><button id="pauseBtn">Pause</button><button id="resetBtn">Reset</button><button id="sampleBtn">Sample NEET Case</button><button id="formulaBtn">Show/Hide Formulas</button></div>
+    <div class="hint">Tip: More radius means more area. More area means less stress and less extension.</div>
+  </aside>
+</main>
+
+<section class="content-grid">
+  <section class="card data"><h2>Live Values</h2><div id="status" class="status">Within elastic limit, stress is directly proportional to strain.</div><div class="stats"><div class="stat"><b>Area of cross-section</b><span id="areaOut">--</span></div><div class="stat"><b>Stress</b><span id="stressOut">--</span></div><div class="stat"><b>Strain</b><span id="strainOut">--</span></div><div class="stat"><b>Extension</b><span id="extensionOut">--</span></div><div class="stat"><b>Young’s modulus</b><span id="yOut">--</span></div><div class="stat"><b>Elastic energy</b><span id="energyOut">--</span></div><div class="stat"><b>Elastic limit status</b><span id="limitOut">--</span></div><div class="stat"><b>Observation</b><span id="obsOut">--</span></div></div></section>
+  <section class="card formula"><h2>Formula Explanation</h2><p>Elasticity connects force, extension and material stiffness.</p><div id="formulaBox" class="formula-box"><code>Stress = Force / Area = F/A</code><code>Strain = Change in length / Original length = ΔL/L</code><code>Young’s modulus: Y = Stress / Strain</code><code>Extension of wire: ΔL = FL / AY</code><code>Hooke's law: F = kx</code><code>Spring energy: U = ½kx²</code><code>Area of circular wire: A = πr²</code><code>Within elastic limit: stress ∝ strain</code></div><p><b>NEET key:</b> Stress unit is N/m² or Pascal, while strain has no unit.</p></section>
+  <section class="card explain"><h2>Simple NEET Explanation</h2><ul><li>Elasticity is the ability of a body to regain original shape after removing force.</li><li>Stress measures internal restoring force per unit area.</li><li>Strain measures fractional change in length.</li><li>Young’s modulus tells how stiff a material is.</li><li>Hooke’s law is valid only within elastic limit.</li><li>After elastic limit, material may not return fully to original shape.</li></ul></section>
+  <section class="card traps"><h2>NEET Traps</h2><ul><li>Strain has no unit.</li><li>Young’s modulus unit is N/m².</li><li>More radius means more area, so extension decreases.</li><li>Longer wire gives more extension for same force.</li><li>Hooke’s law is valid only within elastic limit.</li><li>Energy stored in spring is ½kx², not kx².</li></ul></section>
+  <section class="card questions" style="grid-column:1/-1;padding:18px"><h2>NEET-Style Observation Questions</h2><ol><li>What is the unit of stress?</li><li>Why does strain have no unit?</li><li>What happens to extension if force is doubled?</li><li>What happens to extension if wire radius is increased?</li><li>What does greater Young’s modulus mean?</li><li>What is the area under force-extension graph?</li></ol></section>
+</section>
+<footer><a href="https://courses.draiacademy.com" target="_blank" rel="noopener">Dr AI Academy</a> | AI Powered Physics for NEET</footer>
+
+<script>
+const canvas=document.getElementById('simCanvas'),ctx=canvas.getContext('2d'),tooltip=document.getElementById('tooltip');
+const modeEl=document.getElementById('mode'),materialEl=document.getElementById('material'),forceEl=document.getElementById('force'),lengthEl=document.getElementById('length'),radiusEl=document.getElementById('radius'),springKEl=document.getElementById('springK'),animSpeedEl=document.getElementById('animSpeed'),showForcesEl=document.getElementById('showForces'),showGraphEl=document.getElementById('showGraph'),showFormulaEl=document.getElementById('showFormula'),showTooltipsEl=document.getElementById('showTooltips');
+const materialVal=document.getElementById('materialVal'),forceVal=document.getElementById('forceVal'),lengthVal=document.getElementById('lengthVal'),radiusVal=document.getElementById('radiusVal'),kVal=document.getElementById('kVal'),speedVal=document.getElementById('speedVal');
+const areaOut=document.getElementById('areaOut'),stressOut=document.getElementById('stressOut'),strainOut=document.getElementById('strainOut'),extensionOut=document.getElementById('extensionOut'),yOut=document.getElementById('yOut'),energyOut=document.getElementById('energyOut'),limitOut=document.getElementById('limitOut'),obsOut=document.getElementById('obsOut'),statusEl=document.getElementById('status'),formulaBox=document.getElementById('formulaBox');
+const playBtn=document.getElementById('playBtn'),pauseBtn=document.getElementById('pauseBtn'),resetBtn=document.getElementById('resetBtn'),sampleBtn=document.getElementById('sampleBtn'),formulaBtn=document.getElementById('formulaBtn');
+let playing=false,last=null,load=1,hoverItems=[];
+const mats={steel:{name:'Steel',Y:2e11,limit:2.5e8,color:'#1769ff'},copper:{name:'Copper',Y:1.1e11,limit:7e7,color:'#f57c00'},rubber:{name:'Rubber',Y:1e7,limit:2e6,color:'#7b1fa2'},glass:{name:'Glass',Y:7e10,limit:5e7,color:'#00a9e8'}};
+function fmt(n,u=''){if(!Number.isFinite(n))return'--';if(Math.abs(n)>=1e6||Math.abs(n)<.001&&n!==0)return`${n.toExponential(2)} ${u}`.trim();return`${n.toFixed(4)} ${u}`.trim()}
+function addHover(x,y,w,h,title,text){hoverItems.push({x,y,w,h,title,text})}
+function getP(){const mode=modeEl.value,mat=mats[materialEl.value],F=+forceEl.value*load,L=+lengthEl.value,rMm=+radiusEl.value,k=+springKEl.value,speed=+animSpeedEl.value,r=rMm/1000,A=Math.PI*r*r,stress=F/A,strain=stress/mat.Y,ext=F*L/(A*mat.Y),springX=F/k,energy=.5*k*springX*springX,wireEnergy=.5*F*ext,limitRatio=stress/mat.limit;return{mode,mat,F,L,rMm,k,speed,A,stress,strain,ext,springX,energy,wireEnergy,limitRatio,status:limitRatio<1?'Elastic region':limitRatio<1.35?'Near/after elastic limit':'Plastic or breaking risk'}}
+function updateUI(p){materialVal.textContent=p.mat.name;forceVal.textContent=`${(+forceEl.value).toFixed(0)} N`;lengthVal.textContent=`${p.L.toFixed(1)} m`;radiusVal.textContent=`${p.rMm.toFixed(1)} mm`;kVal.textContent=`${p.k.toFixed(0)} N/m`;speedVal.textContent=`${p.speed.toFixed(1)}×`;formulaBox.classList.toggle('hidden',!showFormulaEl.checked);areaOut.textContent=fmt(p.A,'m²');stressOut.textContent=fmt(p.stress,'Pa');strainOut.textContent=fmt(p.strain,'');extensionOut.textContent=p.mode==='hooke'?fmt(p.springX,'m'):fmt(p.ext,'m');yOut.textContent=fmt(p.mat.Y,'Pa');energyOut.textContent=p.mode==='hooke'?fmt(p.energy,'J'):fmt(p.wireEnergy,'J');limitOut.textContent=p.status;obsOut.textContent=p.limitRatio<1?'Body returns to original length':'Permanent deformation risk';statusEl.textContent=p.mode==='wire'?'Wire extension follows ΔL = FL/AY within elastic limit.':p.mode==='hooke'?'Hooke’s law: force is proportional to extension.':p.mode==='stressStrain'?'Stress-strain curve shows elastic, plastic and breaking regions.':'Different materials have different stiffness because Y is different.'}
+function drawWatermark(){ctx.save();ctx.globalAlpha=.18;ctx.fillStyle='#0b2d5c';ctx.textAlign='right';ctx.font='bold 22px Arial';ctx.fillText('Dr AI Academy',canvas.width-30,canvas.height-42);ctx.font='12px Arial';ctx.fillText('AI Powered Physics for NEET',canvas.width-30,canvas.height-23);ctx.restore()}
+function arrow(x1,y1,x2,y2,c,label=''){const a=Math.atan2(y2-y1,x2-x1),h=11;ctx.save();ctx.strokeStyle=c;ctx.fillStyle=c;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-h*Math.cos(a-Math.PI/6),y2-h*Math.sin(a-Math.PI/6));ctx.lineTo(x2-h*Math.cos(a+Math.PI/6),y2-h*Math.sin(a+Math.PI/6));ctx.closePath();ctx.fill();if(label){ctx.font='bold 13px Arial';ctx.fillText(label,x2+8,y2-8)}ctx.restore()}
+function roundRect(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r)}
+function labelBox(x,y,text,color='#102033'){ctx.save();ctx.fillStyle='rgba(255,255,255,.96)';ctx.strokeStyle='#dbe6f6';ctx.lineWidth=1.5;ctx.font='bold 13px Arial';const w=ctx.measureText(text).width+18;roundRect(x,y,w,26,8);ctx.fill();ctx.stroke();ctx.fillStyle=color;ctx.fillText(text,x+9,y+17);ctx.restore()}
+function drawHeaderBox(title,sub){ctx.save();ctx.fillStyle='rgba(255,255,255,.96)';ctx.strokeStyle='#dbe6f6';ctx.lineWidth=2;roundRect(35,82,565,84,14);ctx.fill();ctx.stroke();ctx.fillStyle='#102033';ctx.font='bold 17px Arial';ctx.fillText(title,55,115);ctx.font='15px Arial';ctx.fillText(sub,55,145);ctx.restore();addHover(35,82,565,84,'Formula focus',`${title}. ${sub}`)}
+function drawWire(p){drawHeaderBox('Young’s modulus: Y = stress / strain','Clean view: left experiment, right graph, bottom notes.');
+  const x=260,yTop=205,baseLen=285,visExt=Math.min(86,p.ext*950),wireBottom=yTop+baseLen+visExt;
+  ctx.save();ctx.fillStyle='#dbeafe';ctx.strokeStyle='#1769ff';ctx.lineWidth=4;roundRect(x-90,yTop-38,180,30,8);ctx.fill();ctx.stroke();ctx.fillStyle='#102033';ctx.font='bold 14px Arial';ctx.textAlign='center';ctx.fillText('Rigid support',x,yTop-17);ctx.restore();
+  ctx.save();ctx.strokeStyle=p.mat.color;ctx.lineWidth=Math.max(4,Math.min(12,p.rMm*2.2));ctx.beginPath();ctx.moveTo(x,yTop);ctx.lineTo(x,wireBottom);ctx.stroke();ctx.restore();
+  ctx.save();ctx.fillStyle='#f57c00';ctx.strokeStyle='#102033';ctx.lineWidth=3;roundRect(x-48,wireBottom,96,54,10);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.font='bold 14px Arial';ctx.textAlign='center';ctx.fillText('Load',x,wireBottom+32);ctx.restore();
+  // dimension lines far from wire
+  ctx.save();ctx.strokeStyle='#637083';ctx.lineWidth=2;ctx.setLineDash([6,6]);ctx.beginPath();ctx.moveTo(x-130,yTop);ctx.lineTo(x-130,yTop+baseLen);ctx.stroke();ctx.setLineDash([]);labelBox(x-205,yTop+baseLen/2-15,'Original length L');ctx.restore();
+  ctx.save();ctx.strokeStyle='#f57c00';ctx.lineWidth=3;ctx.setLineDash([7,6]);ctx.beginPath();ctx.moveTo(x+108,yTop+baseLen);ctx.lineTo(x+108,wireBottom);ctx.stroke();ctx.setLineDash([]);labelBox(x+122,yTop+baseLen+Math.max(4,visExt/2)-14,'Extension ΔL','#f57c00');ctx.restore();
+  if(showForcesEl.checked){arrow(x+95,wireBottom+20,x+95,wireBottom+92,'#0f9d58',`F`);labelBox(x+115,wireBottom+76,`${p.F.toFixed(0)} N`,'#0f9d58')}
+  addHover(x-60,yTop,120,baseLen+visExt+60,'Elastic wire','The wire stretches under load. Extension increases with force and length, but decreases with area and Young’s modulus.');
+  addHover(x-95,yTop-45,190,45,'Rigid support','The upper end is fixed. Because of this fixed support, the load creates tension and extension in the wire.');
+  if(showGraphEl.checked)drawFxGraph(p,620,205,280,250);
+  drawBottomNote('Wire formula: ΔL = FL/AY. Increase radius → area increases → extension decreases.');
+}
+function drawSpring(p){drawHeaderBox('Hooke’s law: F = kx','Spring extension is proportional to applied force within elastic limit.');
+  const wallX=95,y=355,baseLen=320,visX=Math.min(260,p.springX*145),endX=wallX+baseLen+visX;
+  ctx.save();ctx.fillStyle='#dbeafe';ctx.strokeStyle='#1769ff';ctx.lineWidth=4;roundRect(wallX-28,y-115,34,230,8);ctx.fill();ctx.stroke();ctx.fillStyle='#102033';ctx.font='bold 13px Arial';ctx.fillText('fixed wall',wallX-35,y-130);ctx.restore();
+  ctx.save();ctx.strokeStyle='#7b1fa2';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(wallX+8,y);const coils=15,len=endX-wallX-70;for(let i=0;i<=coils;i++){const xx=wallX+8+len*i/coils,yy=y+(i%2===0?-18:18);ctx.lineTo(xx,yy)}ctx.lineTo(endX-55,y);ctx.stroke();ctx.restore();
+  ctx.save();ctx.fillStyle='#f57c00';ctx.strokeStyle='#102033';ctx.lineWidth=3;roundRect(endX-55,y-35,105,70,10);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.font='bold 15px Arial';ctx.textAlign='center';ctx.fillText('Block',endX-3,y+5);ctx.restore();
+  if(showForcesEl.checked){arrow(endX+58,y,endX+145,y,'#0f9d58','F');arrow(endX-62,y+20,endX-155,y+20,'#d93025','restoring force')}
+  labelBox(210,y+62,`x = ${p.springX.toFixed(3)} m`,'#7b1fa2');
+  addHover(wallX,y-70,endX-wallX+95,150,'Spring system','Hooke’s law says F = kx. A larger spring constant gives smaller extension for the same force.');
+  if(showGraphEl.checked)drawFxGraph(p,620,205,280,250);
+  drawBottomNote('Spring formula: F = kx and stored energy U = ½kx².');
+}
+function drawStressStrain(p){drawHeaderBox('Stress-strain curve','Straight part = Hooke’s law. Red region = plastic/breaking risk.');
+  const gx=105,gy=205,w=650,h=360,ox=gx+65,oy=gy+h-55;
+  ctx.save();ctx.fillStyle='rgba(255,255,255,.96)';ctx.strokeStyle='#dbe6f6';ctx.lineWidth=2;roundRect(gx,gy,w,h,14);ctx.fill();ctx.stroke();ctx.strokeStyle='#102033';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(gx+w-35,oy);ctx.moveTo(ox,oy);ctx.lineTo(ox,gy+35);ctx.stroke();ctx.fillStyle='#102033';ctx.font='bold 14px Arial';ctx.fillText('Strain',gx+w-100,oy+32);ctx.fillText('Stress',ox-48,gy+50);
+  ctx.fillStyle='rgba(15,157,88,.10)';ctx.fillRect(ox,gy+60,170,oy-gy-60);ctx.fillStyle='rgba(245,124,0,.12)';ctx.fillRect(ox+170,gy+60,170,oy-gy-60);ctx.fillStyle='rgba(217,48,37,.12)';ctx.fillRect(ox+340,gy+60,210,oy-gy-60);
+  ctx.strokeStyle='#1769ff';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(ox+150,oy-175);ctx.bezierCurveTo(ox+220,oy-240,ox+310,oy-190,ox+395,oy-255);ctx.bezierCurveTo(ox+455,oy-285,ox+500,oy-235,ox+540,oy-210);ctx.stroke();
+  ctx.fillStyle='#0f9d58';ctx.font='bold 13px Arial';ctx.fillText('elastic',ox+45,gy+82);ctx.fillStyle='#f57c00';ctx.fillText('plastic',ox+215,gy+82);ctx.fillStyle='#d93025';ctx.fillText('breaking risk',ox+405,gy+82);
+  const px=ox+Math.min(540,p.limitRatio*165),py=oy-Math.min(250,p.limitRatio*150);ctx.fillStyle='#0f9d58';ctx.beginPath();ctx.arc(px,py,7,0,Math.PI*2);ctx.fill();ctx.restore();
+  addHover(gx,gy,w,h,'Stress-strain graph','This graph shows elastic region, plastic region and breaking risk. Hooke’s law is valid only in initial straight region.');
+  drawBottomNote('In initial straight region: stress ∝ strain. Slope of stress-strain graph = Young’s modulus.');
+}
+function drawMaterials(p){drawHeaderBox('Compare materials','Same force and dimensions, but different Young’s modulus gives different extension.');
+  const keys=['steel','copper','glass','rubber'],xs=[175,350,525,700],top=205,base=520;
+  keys.forEach((key,i)=>{const mat=mats[key],ext=p.F*p.L/(p.A*mat.Y),barH=Math.min(260,40+ext*6000);ctx.save();ctx.fillStyle='rgba(255,255,255,.96)';ctx.strokeStyle='#dbe6f6';ctx.lineWidth=2;roundRect(xs[i]-65,top-35,130,385,14);ctx.fill();ctx.stroke();ctx.strokeStyle=mat.color;ctx.lineWidth=9;ctx.beginPath();ctx.moveTo(xs[i],top+5);ctx.lineTo(xs[i],top+5+barH);ctx.stroke();ctx.fillStyle='#f57c00';ctx.beginPath();ctx.arc(xs[i],top+5+barH+18,18,0,Math.PI*2);ctx.fill();ctx.fillStyle='#102033';ctx.font='bold 13px Arial';ctx.textAlign='center';ctx.fillText(mat.name,xs[i],base+42);ctx.font='12px Arial';ctx.fillText(`Y=${mat.Y.toExponential(1)}`,xs[i],base+64);ctx.fillText(`ΔL≈${ext.toExponential(1)} m`,xs[i],base+84);ctx.restore();addHover(xs[i]-65,top-35,130,385,mat.name,`${mat.name} has Young’s modulus ${mat.Y.toExponential(2)} Pa. Smaller Y means larger extension.`)});
+  drawBottomNote('Rubber stretches much more because its Young’s modulus is very small compared with metals.');
+}
+function drawFxGraph(p,x,y,w,h){ctx.save();ctx.fillStyle='rgba(255,255,255,.96)';ctx.strokeStyle='#dbe6f6';ctx.lineWidth=2;roundRect(x,y,w,h,14);ctx.fill();ctx.stroke();const ox=x+45,oy=y+h-42;ctx.strokeStyle='#102033';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(x+w-25,oy);ctx.moveTo(ox,oy);ctx.lineTo(ox,y+35);ctx.stroke();ctx.fillStyle='#102033';ctx.font='bold 14px Arial';ctx.fillText('Force-extension graph',x+18,y+28);ctx.font='12px Arial';ctx.fillText('x',x+w-42,oy+25);ctx.fillText('F',ox-25,y+48);const endX=x+w-45,endY=y+65;ctx.fillStyle='rgba(123,31,162,.16)';ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(endX,endY);ctx.lineTo(endX,oy);ctx.closePath();ctx.fill();ctx.strokeStyle='#7b1fa2';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(endX,endY);ctx.stroke();ctx.fillStyle='#7b1fa2';ctx.font='bold 12px Arial';ctx.fillText('area = energy',x+95,y+145);ctx.restore();addHover(x,y,w,h,'Force-extension graph','The area under the F-x graph gives elastic potential energy stored in the wire or spring.');}
+function drawBottomNote(text){ctx.save();ctx.fillStyle='rgba(255,255,255,.96)';ctx.strokeStyle='#dbe6f6';ctx.lineWidth=2;roundRect(45,640,850,58,14);ctx.fill();ctx.stroke();ctx.fillStyle='#102033';ctx.font='bold 15px Arial';ctx.fillText(text,70,675);ctx.restore()}
+function drawScene(){const p=getP();updateUI(p);hoverItems=[];ctx.clearRect(0,0,canvas.width,canvas.height);ctx.save();ctx.strokeStyle='#eef3fb';ctx.lineWidth=1;for(let x=0;x<=canvas.width;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke()}for(let y=0;y<=canvas.height;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke()}ctx.restore();ctx.fillStyle='#102033';ctx.font='bold 22px Arial';ctx.fillText('Elasticity Visualizer',28,38);ctx.font='15px Arial';ctx.fillStyle='#637083';ctx.fillText('Clean layout: experiment on left, graph/value area on right, notes at bottom.',28,62);if(p.mode==='wire')drawWire(p);if(p.mode==='hooke')drawSpring(p);if(p.mode==='stressStrain')drawStressStrain(p);if(p.mode==='materials')drawMaterials(p);drawWatermark()}
+function animate(ts){if(last===null)last=ts;const dt=Math.min(.04,(ts-last)/1000);last=ts;const p=getP();if(playing){load+=dt*p.speed*.45;if(load>=1){load=1;playing=false}drawScene()}requestAnimationFrame(animate)}
+function reset(){playing=false;load=1;last=null;tooltip.style.display='none';drawScene()}function start(){load=0;playing=true;last=null}
+function canvasPoint(evt){const rect=canvas.getBoundingClientRect();return{x:(evt.clientX-rect.left)*canvas.width/rect.width,y:(evt.clientY-rect.top)*canvas.height/rect.height,cssX:evt.clientX-rect.left,cssY:evt.clientY-rect.top}}
+canvas.addEventListener('mousemove',evt=>{if(!showTooltipsEl.checked){tooltip.style.display='none';return}const p=canvasPoint(evt),item=hoverItems.find(it=>p.x>=it.x&&p.x<=it.x+it.w&&p.y>=it.y&&p.y<=it.y+it.h);if(item){tooltip.innerHTML=`<strong>${item.title}</strong><br>${item.text}`;tooltip.style.display='block';tooltip.style.left=`${Math.min(p.cssX+14,canvas.clientWidth-300)}px`;tooltip.style.top=`${Math.max(12,p.cssY+14)}px`}else tooltip.style.display='none'});canvas.addEventListener('mouseleave',()=>tooltip.style.display='none');
+[modeEl,materialEl,forceEl,lengthEl,radiusEl,springKEl,animSpeedEl,showForcesEl,showGraphEl,showFormulaEl,showTooltipsEl].forEach(el=>{el.addEventListener('input',reset);el.addEventListener('change',reset)});
+playBtn.onclick=start;pauseBtn.onclick=()=>playing=false;resetBtn.onclick=reset;sampleBtn.onclick=()=>{modeEl.value='wire';materialEl.value='steel';forceEl.value=1000;lengthEl.value=2;radiusEl.value=1;reset()};formulaBtn.onclick=()=>{showFormulaEl.checked=!showFormulaEl.checked;formulaBox.classList.toggle('hidden',!showFormulaEl.checked);drawScene()};
+drawScene();requestAnimationFrame(animate);
+</script>
+</body>
+</html>

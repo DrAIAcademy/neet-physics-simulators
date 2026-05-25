@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEET Physics Simulation: Vernier Caliper & Screw Gauge</title>
+  <style>
+    :root {
+      --panel: #ffffff;
+      --ink: #102033;
+      --muted: #637083;
+      --blue: #1769ff;
+      --green: #0f9d58;
+      --orange: #f57c00;
+      --red: #d93025;
+      --purple: #7b1fa2;
+      --cyan: #00a9e8;
+      --line: #dbe6f6;
+      --soft: #f7faff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #eef5ff, #ffffff);
+      color: var(--ink);
+    }
+
+    header {
+      padding: 24px 18px;
+      text-align: center;
+      background: linear-gradient(135deg, #061d49, #0d6efd);
+      color: white;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: clamp(26px, 4vw, 44px);
+      letter-spacing: 0.3px;
+    }
+
+    header p { margin: 0; opacity: 0.94; font-size: 16px; }
+
+    .wrap {
+      max-width: 1240px;
+      margin: 22px auto;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 390px;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 12px 30px rgba(16, 32, 51, 0.08);
+      overflow: hidden;
+    }
+
+    .canvas-card { padding: 14px; }
+
+    canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 14px;
+      background: white;
+      border: 1px solid #e6eefb;
+    }
+
+    .controls { padding: 18px; }
+    h2 { margin: 0 0 14px; font-size: 20px; }
+
+    .mode-box {
+      margin-bottom: 16px;
+      padding: 12px;
+      background: #f7faff;
+      border: 1px solid #e5eefb;
+      border-radius: 14px;
+    }
+
+    .control {
+      margin-bottom: 14px;
+      padding-bottom: 11px;
+      border-bottom: 1px dashed #d8e3f2;
+    }
+
+    .control:last-of-type { border-bottom: 0; margin-bottom: 12px; padding-bottom: 0; }
+
+    label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    label span { color: var(--blue); white-space: nowrap; }
+
+    input[type="range"], select { width: 100%; accent-color: var(--blue); }
+
+    select {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid #cbd9ec;
+      background: white;
+      color: var(--ink);
+      font-weight: 800;
+      font-size: 15px;
+    }
+
+    .toggle-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 8px;
+      background: #f7faff;
+      border: 1px solid #e5eefb;
+      border-radius: 12px;
+      padding: 9px 10px;
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: 0;
+      padding: 11px 10px;
+      border-radius: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      color: white;
+      background: var(--blue);
+      box-shadow: 0 8px 16px rgba(23, 105, 255, 0.2);
+    }
+
+    button:nth-child(2) { background: var(--orange); }
+    button:nth-child(3) { background: var(--red); }
+    button:nth-child(4) { background: var(--green); }
+    button:nth-child(5) { background: var(--purple); grid-column: 1 / -1; }
+
+    .hint {
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 12px;
+      background: #eef6ff;
+      border: 1px solid #d8eaff;
+      color: #0b45a0;
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: #f4f7fb;
+      border: 1px solid #dde8f6;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .content-grid {
+      max-width: 1240px;
+      margin: 0 auto 34px;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .data, .formula, .questions, .traps, .explain { padding: 18px; }
+
+    .status {
+      padding: 14px 16px;
+      border-radius: 14px;
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 16px;
+      text-align: center;
+      background: #eef6ff;
+      color: #0b45a0;
+      border: 1px solid #d8eaff;
+    }
+
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .stat {
+      background: var(--soft);
+      border: 1px solid #e5eefb;
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .stat b { display: block; color: var(--muted); font-size: 13px; margin-bottom: 5px; }
+    .stat span { font-size: 17px; font-weight: 900; }
+
+    .formula p, .questions li, .traps li, .explain li { line-height: 1.58; }
+
+    .formula-box {
+      background: #f8fbff;
+      border: 1px solid #deebff;
+      border-radius: 14px;
+      padding: 14px;
+      margin: 12px 0;
+      display: block;
+    }
+
+    .formula-box.hidden { display: none; }
+
+    .formula-box code {
+      display: block;
+      font-size: 17px;
+      padding: 4px 0;
+      color: #0b45a0;
+      white-space: normal;
+      font-weight: 800;
+    }
+
+    ol, ul { margin: 0; padding-left: 22px; }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      padding: 0 16px 26px;
+      font-size: 14px;
+    }
+
+    footer strong { color: #0b45a0; }
+
+    @media (max-width: 940px) {
+      .wrap, .content-grid { grid-template-columns: 1fr; }
+      .buttons { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Measurement Lab Simulator</h1>
+    <p>NEET Physics Interactive Lab: Vernier Caliper, Screw Gauge, Least Count, Zero Error, and Final Reading</p>
+  </header>
+
+  <main class="wrap">
+    <section class="card canvas-card">
+      <canvas id="simCanvas" width="960" height="700"></canvas>
+      <div class="legend">
+        <span class="pill">Blue: main scale</span>
+        <span class="pill">Orange: vernier/circular scale</span>
+        <span class="pill">Red: zero error correction</span>
+        <span class="pill">Green: final reading</span>
+        <span class="pill">Watermark: Dr AI Academy</span>
+      </div>
+    </section>
+
+    <aside class="card controls">
+      <h2>Controls</h2>
+
+      <div class="mode-box">
+        <label>Instrument</label>
+        <select id="mode">
+          <option value="vernier" selected>Vernier Caliper</option>
+          <option value="screw">Screw Gauge</option>
+        </select>
+      </div>
+
+      <div class="control"><label>Object size <span id="sizeVal">2.45 cm</span></label><input id="objectSize" type="range" min="0.1" max="8" step="0.01" value="2.45" /></div>
+      <div class="control"><label>Vernier least count <span id="vlcVal">0.01 cm</span></label><input id="vernierLC" type="range" min="0.001" max="0.05" step="0.001" value="0.01" /></div>
+      <div class="control"><label>Screw pitch <span id="pitchVal">0.50 mm</span></label><input id="pitch" type="range" min="0.25" max="1" step="0.05" value="0.5" /></div>
+      <div class="control"><label>Circular divisions <span id="divVal">50</span></label><input id="divisions" type="range" min="50" max="100" step="50" value="50" /></div>
+      <div class="control"><label>Zero error <span id="zeroVal">0.00</span></label><input id="zeroError" type="range" min="-0.05" max="0.05" step="0.001" value="0" /></div>
+      <div class="control"><label>Zoom <span id="zoomVal">1.0×</span></label><input id="zoom" type="range" min="0.7" max="1.4" step="0.1" value="1" /></div>
+
+      <div class="toggle-row">
+        <label class="toggle"><input id="showSteps" type="checkbox" checked /> Steps</label>
+        <label class="toggle"><input id="showFormula" type="checkbox" checked /> Formulas</label>
+        <label class="toggle"><input id="showError" type="checkbox" checked /> Zero error</label>
+        <label class="toggle"><input id="showLabels" type="checkbox" checked /> Labels</label>
+      </div>
+
+      <div class="buttons">
+        <button id="resetBtn">Reset</button>
+        <button id="randomBtn">Random Object</button>
+        <button id="zeroBtn">Set Zero Error</button>
+        <button id="clearBtn">Clear Zero Error</button>
+        <button id="formulaBtn">Show/Hide Formulas</button>
+      </div>
+
+      <div class="hint">Tip: Final reading = observed reading − zero error. If zero error is positive, subtract it. If zero error is negative, it gets added automatically.</div>
+    </aside>
+  </main>
+
+  <section class="content-grid">
+    <section class="card data">
+      <h2>Live Reading</h2>
+      <div id="status" class="status">Read main scale first, then add vernier/circular scale reading.</div>
+      <div class="stats">
+        <div class="stat"><b>Main scale reading</b><span id="msrOut">--</span></div>
+        <div class="stat"><b>Coinciding division</b><span id="coincideOut">--</span></div>
+        <div class="stat"><b>Scale reading</b><span id="scaleOut">--</span></div>
+        <div class="stat"><b>Observed reading</b><span id="observedOut">--</span></div>
+        <div class="stat"><b>Zero error</b><span id="zeroOut">--</span></div>
+        <div class="stat"><b>Zero correction</b><span id="correctionOut">--</span></div>
+        <div class="stat"><b>Final corrected reading</b><span id="finalOut">--</span></div>
+        <div class="stat"><b>Least count</b><span id="lcOut">--</span></div>
+      </div>
+    </section>
+
+    <section class="card formula">
+      <h2>Formula Explanation</h2>
+      <p>Measurement questions are very scoring in NEET if least count and zero error are handled correctly.</p>
+      <div id="formulaBox" class="formula-box">
+        <code>Vernier reading = MSR + VCD × LC</code>
+        <code>Correct reading = Observed reading − Zero error</code>
+        <code>Zero correction = − Zero error</code>
+        <code>Screw gauge least count = Pitch / Number of circular scale divisions</code>
+        <code>Screw gauge reading = MSR + CSR × LC</code>
+        <code>Positive zero error is subtracted from observed reading.</code>
+        <code>Negative zero error is added to observed reading.</code>
+      </div>
+      <p><b>NEET key:</b> Do not forget units. Vernier often uses cm or mm; screw gauge often uses mm.</p>
+    </section>
+
+    <section class="card explain">
+      <h2>Simple NEET Explanation</h2>
+      <ul>
+        <li>Least count is the smallest measurement an instrument can measure accurately.</li>
+        <li>In vernier caliper, read the main scale reading just before vernier zero.</li>
+        <li>Then find the vernier division that exactly matches a main scale mark.</li>
+        <li>Observed reading = main scale reading + vernier scale reading.</li>
+        <li>In screw gauge, pitch means distance moved by screw in one full rotation.</li>
+        <li>Circular scale reading is multiplied by least count.</li>
+        <li>Zero error must be corrected to get the true reading.</li>
+      </ul>
+    </section>
+
+    <section class="card traps">
+      <h2>NEET Traps</h2>
+      <ul>
+        <li>Do not confuse zero error and zero correction.</li>
+        <li>Correct reading = observed reading − zero error.</li>
+        <li>Positive zero error makes observed reading too high.</li>
+        <li>Negative zero error makes observed reading too low.</li>
+        <li>For screw gauge, least count = pitch / circular divisions.</li>
+        <li>Main scale reading should be read just before the zero of vernier/circular scale.</li>
+        <li>Always check whether answer is required in cm, mm, or metre.</li>
+        <li>Significant figures should match instrument precision.</li>
+      </ul>
+    </section>
+
+    <section class="card questions" style="grid-column: 1 / -1; padding: 18px;">
+      <h2>NEET-Style Observation Questions</h2>
+      <ol>
+        <li>What is least count and why is it important?</li>
+        <li>If zero error is positive, should it be added or subtracted?</li>
+        <li>How do you calculate screw gauge least count?</li>
+        <li>Why is zero correction equal to negative of zero error?</li>
+        <li>Which reading is taken first in vernier caliper: main scale or vernier scale?</li>
+        <li>What happens to accuracy when least count becomes smaller?</li>
+        <li>Why should unit conversion be checked carefully in measurement questions?</li>
+      </ol>
+    </section>
+  </section>
+
+  <footer><strong>Dr AI Academy</strong> | AI Powered Physics for NEET</footer>
+
+  <script>
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const modeEl = document.getElementById('mode');
+    const objectSizeEl = document.getElementById('objectSize');
+    const vernierLCEl = document.getElementById('vernierLC');
+    const pitchEl = document.getElementById('pitch');
+    const divisionsEl = document.getElementById('divisions');
+    const zeroErrorEl = document.getElementById('zeroError');
+    const zoomEl = document.getElementById('zoom');
+    const showStepsEl = document.getElementById('showSteps');
+    const showFormulaEl = document.getElementById('showFormula');
+    const showErrorEl = document.getElementById('showError');
+    const showLabelsEl = document.getElementById('showLabels');
+
+    const sizeVal = document.getElementById('sizeVal');
+    const vlcVal = document.getElementById('vlcVal');
+    const pitchVal = document.getElementById('pitchVal');
+    const divVal = document.getElementById('divVal');
+    const zeroVal = document.getElementById('zeroVal');
+    const zoomVal = document.getElementById('zoomVal');
+
+    const msrOut = document.getElementById('msrOut');
+    const coincideOut = document.getElementById('coincideOut');
+    const scaleOut = document.getElementById('scaleOut');
+    const observedOut = document.getElementById('observedOut');
+    const zeroOut = document.getElementById('zeroOut');
+    const correctionOut = document.getElementById('correctionOut');
+    const finalOut = document.getElementById('finalOut');
+    const lcOut = document.getElementById('lcOut');
+    const statusEl = document.getElementById('status');
+    const formulaBox = document.getElementById('formulaBox');
+
+    const resetBtn = document.getElementById('resetBtn');
+    const randomBtn = document.getElementById('randomBtn');
+    const zeroBtn = document.getElementById('zeroBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const formulaBtn = document.getElementById('formulaBtn');
+
+    function fmt(num, unit = '') {
+      if (!Number.isFinite(num)) return '--';
+      return `${num.toFixed(3)} ${unit}`.trim();
+    }
+
+    function getParams() {
+      const mode = modeEl.value;
+      const sizeCm = Number(objectSizeEl.value);
+      const vLC = Number(vernierLCEl.value);
+      const pitch = Number(pitchEl.value);
+      const divisions = Number(divisionsEl.value);
+      const zero = Number(zeroErrorEl.value);
+      const zoom = Number(zoomEl.value);
+      const screwLC = pitch / divisions;
+
+      if (mode === 'vernier') {
+        const observed = sizeCm + zero;
+        const msr = Math.floor(observed * 10) / 10;
+        const remainder = Math.max(0, observed - msr);
+        const vcd = Math.round(remainder / vLC);
+        const scaleReading = vcd * vLC;
+        const finalReading = observed - zero;
+        return { mode, sizeCm, observed, msr, vcd, scaleReading, finalReading, zero, correction: -zero, lc: vLC, zoom, unit: 'cm' };
+      }
+
+      const sizeMm = sizeCm * 10;
+      const zeroMm = zero * 10;
+      const observedMm = sizeMm + zeroMm;
+      const msr = Math.floor(observedMm / pitch) * pitch;
+      const remainder = Math.max(0, observedMm - msr);
+      const csr = Math.round(remainder / screwLC) % divisions;
+      const scaleReading = csr * screwLC;
+      const finalReading = observedMm - zeroMm;
+      return { mode, sizeCm, observed: observedMm, msr, vcd: csr, scaleReading, finalReading, zero: zeroMm, correction: -zeroMm, lc: screwLC, zoom, unit: 'mm' };
+    }
+
+    function updateUI(p) {
+      sizeVal.textContent = `${Number(objectSizeEl.value).toFixed(2)} cm`;
+      vlcVal.textContent = `${Number(vernierLCEl.value).toFixed(3)} cm`;
+      pitchVal.textContent = `${Number(pitchEl.value).toFixed(2)} mm`;
+      divVal.textContent = `${Number(divisionsEl.value)}`;
+      zeroVal.textContent = `${Number(zeroErrorEl.value).toFixed(3)} cm`;
+      zoomVal.textContent = `${Number(zoomEl.value).toFixed(1)}×`;
+      formulaBox.classList.toggle('hidden', !showFormulaEl.checked);
+
+      msrOut.textContent = fmt(p.msr, p.unit);
+      coincideOut.textContent = `${p.vcd}`;
+      scaleOut.textContent = fmt(p.scaleReading, p.unit);
+      observedOut.textContent = fmt(p.observed, p.unit);
+      zeroOut.textContent = fmt(p.zero, p.unit);
+      correctionOut.textContent = fmt(p.correction, p.unit);
+      finalOut.textContent = fmt(p.finalReading, p.unit);
+      lcOut.textContent = fmt(p.lc, p.unit);
+
+      if (p.mode === 'vernier') {
+        statusEl.textContent = 'Vernier Caliper: Final reading = MSR + VCD × LC − zero error.';
+      } else {
+        statusEl.textContent = 'Screw Gauge: Final reading = MSR + CSR × LC − zero error.';
+      }
+    }
+
+    function drawWatermark() {
+      ctx.save();
+      ctx.globalAlpha = 0.18;
+      ctx.fillStyle = '#0b2d5c';
+      ctx.textAlign = 'right';
+      ctx.font = 'bold 22px Arial';
+      ctx.fillText('Dr AI Academy', canvas.width - 30, canvas.height - 42);
+      ctx.font = '12px Arial';
+      ctx.fillText('AI Powered Physics for NEET', canvas.width - 30, canvas.height - 23);
+      ctx.restore();
+    }
+
+    function drawArrow(x1, y1, x2, y2, color, label = '') {
+      const headLen = 10;
+      const a = Math.atan2(y2 - y1, x2 - x1);
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - headLen * Math.cos(a - Math.PI / 6), y2 - headLen * Math.sin(a - Math.PI / 6));
+      ctx.lineTo(x2 - headLen * Math.cos(a + Math.PI / 6), y2 - headLen * Math.sin(a + Math.PI / 6));
+      ctx.closePath();
+      ctx.fill();
+      if (label) {
+        ctx.font = 'bold 13px Arial';
+        ctx.fillText(label, x2 + 8, y2 - 8);
+      }
+      ctx.restore();
+    }
+
+    function drawScale(x, y, lengthPx, cmCount, pxPerCm, title) {
+      ctx.save();
+      ctx.strokeStyle = '#102033';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + lengthPx, y);
+      ctx.stroke();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 15px Arial';
+      ctx.fillText(title, x, y - 30);
+
+      for (let i = 0; i <= cmCount * 10; i++) {
+        const xx = x + i * pxPerCm / 10;
+        const h = i % 10 === 0 ? 22 : i % 5 === 0 ? 16 : 10;
+        ctx.beginPath();
+        ctx.moveTo(xx, y);
+        ctx.lineTo(xx, y + h);
+        ctx.stroke();
+        if (i % 10 === 0) {
+          ctx.font = '12px Arial';
+          ctx.fillText(String(i / 10), xx - 4, y + 38);
+        }
+      }
+      ctx.restore();
+    }
+
+    function drawVernier(p) {
+      const pxPerCm = 80 * p.zoom;
+      const x0 = 80;
+      const y0 = 210;
+      const lengthPx = 8.5 * pxPerCm;
+      const zeroX = x0 + p.observed * pxPerCm;
+
+      drawScale(x0, y0, lengthPx, 8, pxPerCm, 'Main Scale in cm');
+
+      // Fixed jaw and moving jaw.
+      ctx.save();
+      ctx.fillStyle = '#dbeafe';
+      ctx.strokeStyle = '#1769ff';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.roundRect(x0 - 18, y0 - 72, 32, 85, 8);
+      ctx.fill(); ctx.stroke();
+      ctx.beginPath();
+      ctx.roundRect(zeroX - 12, y0 - 72, 32, 85, 8);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 13px Arial';
+      ctx.fillText('Fixed jaw', x0 - 30, y0 - 84);
+      ctx.fillText('Moving jaw', zeroX - 34, y0 - 84);
+      ctx.restore();
+
+      // Object between jaws.
+      ctx.save();
+      ctx.fillStyle = '#fef3c7';
+      ctx.strokeStyle = '#f57c00';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.roundRect(x0 + 10, y0 - 55, Math.max(15, zeroX - x0 - 12), 38, 10);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 14px Arial';
+      ctx.fillText(`Object ≈ ${p.finalReading.toFixed(2)} cm`, x0 + 35, y0 - 28);
+      ctx.restore();
+
+      // Vernier scale.
+      ctx.save();
+      ctx.fillStyle = 'rgba(245,124,0,0.12)';
+      ctx.strokeStyle = '#f57c00';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.roundRect(zeroX, y0 + 60, 10 * pxPerCm / 10 * 0.9, 75, 10);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#f57c00';
+      ctx.font = 'bold 14px Arial';
+      ctx.fillText('Vernier Scale', zeroX + 8, y0 + 52);
+      for (let i = 0; i <= 10; i++) {
+        const xx = zeroX + i * (pxPerCm / 10) * 0.9;
+        ctx.beginPath();
+        ctx.moveTo(xx, y0 + 60);
+        ctx.lineTo(xx, y0 + 60 + (i === p.vcd ? 55 : 28));
+        ctx.stroke();
+        ctx.fillText(String(i), xx - 4, y0 + 128);
+      }
+      const coincideX = zeroX + p.vcd * (pxPerCm / 10) * 0.9;
+      drawArrow(coincideX, y0 + 145, coincideX, y0 + 103, '#d93025', `VCD = ${p.vcd}`);
+      ctx.restore();
+
+      if (showErrorEl.checked) drawZeroErrorBox(p, 590, 390);
+      if (showStepsEl.checked) drawStepsBox(p, 50, 390);
+    }
+
+    function drawScrewGauge(p) {
+      const x0 = 120;
+      const y0 = 250;
+      const pxPerMm = 28 * p.zoom;
+      const sleeveX = 230;
+      const spindleX = sleeveX + p.observed * pxPerMm;
+
+      ctx.save();
+      // Frame
+      ctx.strokeStyle = '#1769ff';
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.arc(190, y0, 110, Math.PI * 0.55, Math.PI * 1.45);
+      ctx.stroke();
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(190, y0 - 95);
+      ctx.lineTo(500, y0 - 95);
+      ctx.moveTo(190, y0 + 95);
+      ctx.lineTo(500, y0 + 95);
+      ctx.stroke();
+
+      // Anvil and spindle
+      ctx.fillStyle = '#dbeafe';
+      ctx.strokeStyle = '#102033';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.roundRect(x0, y0 - 30, 45, 60, 8);
+      ctx.roundRect(spindleX, y0 - 22, 85, 44, 8);
+      ctx.fill(); ctx.stroke();
+
+      // Object
+      ctx.fillStyle = '#fef3c7';
+      ctx.strokeStyle = '#f57c00';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.roundRect(x0 + 48, y0 - 25, Math.max(15, spindleX - x0 - 52), 50, 10);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 14px Arial';
+      ctx.fillText(`Object ≈ ${p.finalReading.toFixed(2)} mm`, x0 + 95, y0 - 38);
+
+      // Sleeve scale
+      ctx.strokeStyle = '#102033';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(sleeveX, y0 + 80);
+      ctx.lineTo(560, y0 + 80);
+      ctx.stroke();
+      for (let i = 0; i <= 12; i++) {
+        const xx = sleeveX + i * pxPerMm * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(xx, y0 + 80);
+        ctx.lineTo(xx, y0 + 80 + (i % 2 === 0 ? 22 : 13));
+        ctx.stroke();
+        if (i % 2 === 0) ctx.fillText(String(i / 2), xx - 4, y0 + 118);
+      }
+      ctx.fillText('Main scale / sleeve scale', sleeveX, y0 + 150);
+
+      // Thimble circular scale representation
+      const thimbleX = 620;
+      const thimbleY = y0;
+      ctx.fillStyle = 'rgba(245,124,0,0.12)';
+      ctx.strokeStyle = '#f57c00';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.ellipse(thimbleX, thimbleY, 62, 110, 0, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#f57c00';
+      ctx.font = 'bold 14px Arial';
+      ctx.fillText('Circular scale', thimbleX - 42, thimbleY - 130);
+      for (let i = 0; i < 10; i++) {
+        const yy = thimbleY - 90 + i * 20;
+        ctx.strokeStyle = i === Math.round((p.vcd / Number(divisionsEl.value)) * 10) ? '#d93025' : '#f57c00';
+        ctx.lineWidth = i === Math.round((p.vcd / Number(divisionsEl.value)) * 10) ? 4 : 2;
+        ctx.beginPath();
+        ctx.moveTo(thimbleX - 35, yy);
+        ctx.lineTo(thimbleX + 35, yy);
+        ctx.stroke();
+      }
+      ctx.fillStyle = '#d93025';
+      ctx.font = 'bold 15px Arial';
+      ctx.fillText(`CSR ≈ ${p.vcd}`, thimbleX - 35, thimbleY + 135);
+      ctx.restore();
+
+      if (showErrorEl.checked) drawZeroErrorBox(p, 590, 390);
+      if (showStepsEl.checked) drawStepsBox(p, 50, 390);
+    }
+
+    function drawZeroErrorBox(p, x, y) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.96)';
+      ctx.strokeStyle = '#d93025';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(x, y, 320, 120, 14);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 16px Arial';
+      ctx.fillText('Zero Error Correction', x + 18, y + 30);
+      ctx.font = '14px Arial';
+      ctx.fillText(`Zero error = ${p.zero.toFixed(3)} ${p.unit}`, x + 18, y + 58);
+      ctx.fillText(`Zero correction = ${p.correction.toFixed(3)} ${p.unit}`, x + 18, y + 82);
+      ctx.fillText('Correct reading = observed − zero error', x + 18, y + 106);
+      ctx.restore();
+    }
+
+    function drawStepsBox(p, x, y) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.96)';
+      ctx.strokeStyle = '#dbe6f6';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(x, y, 500, 150, 14);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 16px Arial';
+      ctx.fillText('Reading Steps', x + 18, y + 30);
+      ctx.font = '14px Arial';
+      const scaleName = p.mode === 'vernier' ? 'Vernier scale reading' : 'Circular scale reading';
+      ctx.fillText(`1. Main scale reading = ${p.msr.toFixed(3)} ${p.unit}`, x + 18, y + 58);
+      ctx.fillText(`2. ${scaleName} = ${p.vcd} × ${p.lc.toFixed(3)} = ${p.scaleReading.toFixed(3)} ${p.unit}`, x + 18, y + 82);
+      ctx.fillText(`3. Observed reading = ${p.observed.toFixed(3)} ${p.unit}`, x + 18, y + 106);
+      ctx.fillText(`4. Final reading = ${p.finalReading.toFixed(3)} ${p.unit}`, x + 18, y + 130);
+      ctx.restore();
+    }
+
+    function drawWatermark() {
+      ctx.save();
+      ctx.globalAlpha = 0.18;
+      ctx.fillStyle = '#0b2d5c';
+      ctx.textAlign = 'right';
+      ctx.font = 'bold 22px Arial';
+      ctx.fillText('Dr AI Academy', canvas.width - 30, canvas.height - 42);
+      ctx.font = '12px Arial';
+      ctx.fillText('AI Powered Physics for NEET', canvas.width - 30, canvas.height - 23);
+      ctx.restore();
+    }
+
+    function drawScene() {
+      const p = getParams();
+      updateUI(p);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.save();
+      ctx.strokeStyle = '#eef3fb';
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= canvas.width; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
+      for (let y = 0; y <= canvas.height; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
+      ctx.restore();
+
+      ctx.save();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 22px Arial';
+      ctx.fillText(p.mode === 'vernier' ? 'Vernier Caliper Reading Simulator' : 'Screw Gauge Reading Simulator', 28, 38);
+      ctx.font = '15px Arial';
+      ctx.fillStyle = '#637083';
+      ctx.fillText('Learn least count, zero error, scale reading, and corrected measurement.', 28, 62);
+      ctx.restore();
+
+      if (p.mode === 'vernier') drawVernier(p); else drawScrewGauge(p);
+      drawWatermark();
+    }
+
+    function resetSimulation() {
+      modeEl.value = 'vernier';
+      objectSizeEl.value = 2.45;
+      vernierLCEl.value = 0.01;
+      pitchEl.value = 0.5;
+      divisionsEl.value = 50;
+      zeroErrorEl.value = 0;
+      zoomEl.value = 1;
+      showStepsEl.checked = true;
+      showFormulaEl.checked = true;
+      showErrorEl.checked = true;
+      showLabelsEl.checked = true;
+      drawScene();
+    }
+
+    [modeEl, objectSizeEl, vernierLCEl, pitchEl, divisionsEl, zeroErrorEl, zoomEl, showStepsEl, showFormulaEl, showErrorEl, showLabelsEl].forEach(el => {
+      el.addEventListener('input', drawScene);
+      el.addEventListener('change', drawScene);
+    });
+
+    resetBtn.addEventListener('click', resetSimulation);
+    randomBtn.addEventListener('click', () => {
+      const random = 0.2 + Math.random() * 7.5;
+      objectSizeEl.value = random.toFixed(2);
+      drawScene();
+    });
+    zeroBtn.addEventListener('click', () => {
+      const randomZero = (Math.random() * 0.06 - 0.03).toFixed(3);
+      zeroErrorEl.value = randomZero;
+      drawScene();
+    });
+    clearBtn.addEventListener('click', () => {
+      zeroErrorEl.value = 0;
+      drawScene();
+    });
+    formulaBtn.addEventListener('click', () => {
+      showFormulaEl.checked = !showFormulaEl.checked;
+      formulaBox.classList.toggle('hidden', !showFormulaEl.checked);
+      drawScene();
+    });
+
+    drawScene();
+  </script>
+</body>
+</html>

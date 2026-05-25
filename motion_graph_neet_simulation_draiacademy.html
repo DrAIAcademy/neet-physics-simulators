@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEET Physics Simulation: Motion Graph Simulator</title>
+  <style>
+    :root {
+      --panel: #ffffff;
+      --ink: #102033;
+      --muted: #637083;
+      --blue: #1769ff;
+      --green: #0f9d58;
+      --orange: #f57c00;
+      --red: #d93025;
+      --purple: #7b1fa2;
+      --cyan: #00a9e8;
+      --line: #dbe6f6;
+      --soft: #f7faff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #eef5ff, #ffffff);
+      color: var(--ink);
+    }
+
+    header {
+      padding: 24px 18px;
+      text-align: center;
+      background: linear-gradient(135deg, #061d49, #0d6efd);
+      color: white;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: clamp(26px, 4vw, 44px);
+      letter-spacing: 0.3px;
+    }
+
+    header p { margin: 0; opacity: 0.94; font-size: 16px; }
+
+    .wrap {
+      max-width: 1240px;
+      margin: 22px auto;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 390px;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 12px 30px rgba(16, 32, 51, 0.08);
+      overflow: hidden;
+    }
+
+    .canvas-card { padding: 14px; }
+
+    canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 14px;
+      background: white;
+      border: 1px solid #e6eefb;
+    }
+
+    .controls { padding: 18px; }
+    h2 { margin: 0 0 14px; font-size: 20px; }
+
+    .mode-box {
+      margin-bottom: 16px;
+      padding: 12px;
+      background: #f7faff;
+      border: 1px solid #e5eefb;
+      border-radius: 14px;
+    }
+
+    .control {
+      margin-bottom: 14px;
+      padding-bottom: 11px;
+      border-bottom: 1px dashed #d8e3f2;
+    }
+
+    .control:last-of-type { border-bottom: 0; margin-bottom: 12px; padding-bottom: 0; }
+
+    label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    label span { color: var(--blue); white-space: nowrap; }
+
+    input[type="range"], select { width: 100%; accent-color: var(--blue); }
+
+    select {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid #cbd9ec;
+      background: white;
+      color: var(--ink);
+      font-weight: 800;
+      font-size: 15px;
+    }
+
+    .toggle-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 8px;
+      background: #f7faff;
+      border: 1px solid #e5eefb;
+      border-radius: 12px;
+      padding: 9px 10px;
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: 0;
+      padding: 11px 10px;
+      border-radius: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      color: white;
+      background: var(--blue);
+      box-shadow: 0 8px 16px rgba(23, 105, 255, 0.2);
+    }
+
+    button:nth-child(2) { background: var(--orange); }
+    button:nth-child(3) { background: var(--red); }
+    button:nth-child(4) { background: var(--green); }
+    button:nth-child(5) { background: var(--purple); grid-column: 1 / -1; }
+
+    .hint {
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 12px;
+      background: #eef6ff;
+      border: 1px solid #d8eaff;
+      color: #0b45a0;
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: #f4f7fb;
+      border: 1px solid #dde8f6;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .content-grid {
+      max-width: 1240px;
+      margin: 0 auto 34px;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .data, .formula, .questions, .traps, .explain { padding: 18px; }
+
+    .status {
+      padding: 14px 16px;
+      border-radius: 14px;
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 16px;
+      text-align: center;
+      background: #eef6ff;
+      color: #0b45a0;
+      border: 1px solid #d8eaff;
+    }
+
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .stat {
+      background: var(--soft);
+      border: 1px solid #e5eefb;
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .stat b { display: block; color: var(--muted); font-size: 13px; margin-bottom: 5px; }
+    .stat span { font-size: 17px; font-weight: 900; }
+
+    .formula p, .questions li, .traps li, .explain li { line-height: 1.58; }
+
+    .formula-box {
+      background: #f8fbff;
+      border: 1px solid #deebff;
+      border-radius: 14px;
+      padding: 14px;
+      margin: 12px 0;
+      display: block;
+    }
+
+    .formula-box.hidden { display: none; }
+
+    .formula-box code {
+      display: block;
+      font-size: 17px;
+      padding: 4px 0;
+      color: #0b45a0;
+      white-space: normal;
+      font-weight: 800;
+    }
+
+    ol, ul { margin: 0; padding-left: 22px; }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      padding: 0 16px 26px;
+      font-size: 14px;
+    }
+
+    footer a {
+      color: #0b45a0;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 940px) {
+      .wrap, .content-grid { grid-template-columns: 1fr; }
+      .buttons { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Motion Graph Simulator</h1>
+    <p>NEET Physics Interactive Lab: x-t graph, v-t graph, a-t graph, slope, area, displacement, and acceleration</p>
+  </header>
+
+  <main class="wrap">
+    <section class="card canvas-card">
+      <canvas id="simCanvas" width="960" height="720"></canvas>
+      <div class="legend">
+        <span class="pill">Blue: position-time graph</span>
+        <span class="pill">Green: velocity-time graph</span>
+        <span class="pill">Red: acceleration-time graph</span>
+        <span class="pill">Purple: area/slope meaning</span>
+        <span class="pill">Watermark: Dr AI Academy</span>
+      </div>
+    </section>
+
+    <aside class="card controls">
+      <h2>Controls</h2>
+
+      <div class="mode-box">
+        <label>Motion type</label>
+        <select id="mode">
+          <option value="uniform" selected>Uniform motion</option>
+          <option value="accelerated">Uniform acceleration</option>
+          <option value="decelerated">Uniform deceleration</option>
+          <option value="restThenMove">Rest then move</option>
+          <option value="returnMotion">Move and return</option>
+        </select>
+      </div>
+
+      <div class="control"><label>Initial position, x₀ <span id="x0Val">0 m</span></label><input id="x0" type="range" min="-20" max="20" step="1" value="0" /></div>
+      <div class="control"><label>Initial velocity, u <span id="uVal">5 m/s</span></label><input id="u" type="range" min="-15" max="20" step="1" value="5" /></div>
+      <div class="control"><label>Acceleration, a <span id="aVal">0 m/s²</span></label><input id="acc" type="range" min="-8" max="8" step="0.5" value="0" /></div>
+      <div class="control"><label>Total time <span id="timeVal">10 s</span></label><input id="totalTime" type="range" min="4" max="20" step="1" value="10" /></div>
+      <div class="control"><label>Animation speed <span id="speedVal">1.0×</span></label><input id="animSpeed" type="range" min="0.3" max="3" step="0.1" value="1" /></div>
+      <div class="control"><label>Graph zoom <span id="zoomVal">1.0×</span></label><input id="zoom" type="range" min="0.7" max="1.5" step="0.1" value="1" /></div>
+
+      <div class="toggle-row">
+        <label class="toggle"><input id="showXT" type="checkbox" checked /> x-t graph</label>
+        <label class="toggle"><input id="showVT" type="checkbox" checked /> v-t graph</label>
+        <label class="toggle"><input id="showAT" type="checkbox" checked /> a-t graph</label>
+        <label class="toggle"><input id="showFormula" type="checkbox" checked /> Formulas</label>
+      </div>
+
+      <div class="buttons">
+        <button id="playBtn">Play</button>
+        <button id="pauseBtn">Pause</button>
+        <button id="resetBtn">Reset</button>
+        <button id="sampleBtn">Sample NEET Case</button>
+        <button id="formulaBtn">Show/Hide Formulas</button>
+      </div>
+
+      <div class="hint">Tip: In x-t graph, slope gives velocity. In v-t graph, slope gives acceleration and area gives displacement.</div>
+    </aside>
+  </main>
+
+  <section class="content-grid">
+    <section class="card data">
+      <h2>Live Values</h2>
+      <div id="status" class="status">For x-t graph: slope = velocity. For v-t graph: area = displacement.</div>
+      <div class="stats">
+        <div class="stat"><b>Current time</b><span id="currentTimeOut">--</span></div>
+        <div class="stat"><b>Position, x</b><span id="positionOut">--</span></div>
+        <div class="stat"><b>Velocity, v</b><span id="velocityOut">--</span></div>
+        <div class="stat"><b>Acceleration, a</b><span id="accOut">--</span></div>
+        <div class="stat"><b>Displacement</b><span id="displacementOut">--</span></div>
+        <div class="stat"><b>Distance travelled</b><span id="distanceOut">--</span></div>
+        <div class="stat"><b>Area under v-t graph</b><span id="areaOut">--</span></div>
+        <div class="stat"><b>Graph meaning</b><span id="meaningOut">--</span></div>
+      </div>
+    </section>
+
+    <section class="card formula">
+      <h2>Formula Explanation</h2>
+      <p>Motion graphs are very important for NEET because many questions are solved by slope and area.</p>
+      <div id="formulaBox" class="formula-box">
+        <code>For x-t graph: slope = velocity</code>
+        <code>For v-t graph: slope = acceleration</code>
+        <code>For v-t graph: area under graph = displacement</code>
+        <code>For a-t graph: area under graph = change in velocity</code>
+        <code>Uniform motion: x = x₀ + vt</code>
+        <code>Uniform acceleration: v = u + at</code>
+        <code>Position: x = x₀ + ut + ½at²</code>
+        <code>Displacement = final position − initial position</code>
+      </div>
+      <p><b>NEET key:</b> Distance and displacement are not always the same. If direction changes, distance is greater than or equal to displacement magnitude.</p>
+    </section>
+
+    <section class="card explain">
+      <h2>Simple NEET Explanation</h2>
+      <ul>
+        <li>x-t graph tells how position changes with time.</li>
+        <li>Slope of x-t graph gives velocity.</li>
+        <li>v-t graph tells how velocity changes with time.</li>
+        <li>Slope of v-t graph gives acceleration.</li>
+        <li>Area under v-t graph gives displacement.</li>
+        <li>a-t graph tells how acceleration changes with time.</li>
+        <li>Area under a-t graph gives change in velocity.</li>
+        <li>Horizontal line in v-t graph means constant velocity.</li>
+        <li>Horizontal line in a-t graph means constant acceleration.</li>
+      </ul>
+    </section>
+
+    <section class="card traps">
+      <h2>NEET Traps</h2>
+      <ul>
+        <li>Do not confuse slope and area.</li>
+        <li>Slope of x-t graph is velocity, not acceleration.</li>
+        <li>Area under v-t graph is displacement, not distance in all cases.</li>
+        <li>If velocity becomes negative, object moves in opposite direction.</li>
+        <li>Negative acceleration does not always mean slowing down.</li>
+        <li>A curved x-t graph means velocity is changing.</li>
+        <li>A straight v-t graph means acceleration is constant.</li>
+        <li>Displacement can be zero even when distance is not zero.</li>
+      </ul>
+    </section>
+
+    <section class="card questions" style="grid-column: 1 / -1; padding: 18px;">
+      <h2>NEET-Style Observation Questions</h2>
+      <ol>
+        <li>What does the slope of an x-t graph represent?</li>
+        <li>What does the slope of a v-t graph represent?</li>
+        <li>What does the area under a v-t graph represent?</li>
+        <li>Can displacement be zero while distance is not zero?</li>
+        <li>What does a horizontal line in a v-t graph mean?</li>
+        <li>What does a curved x-t graph indicate?</li>
+        <li>Why is negative velocity different from negative acceleration?</li>
+      </ol>
+    </section>
+  </section>
+
+  <footer><a href="https://courses.draiacademy.com" target="_blank" rel="noopener">Dr AI Academy</a> | AI Powered Physics for NEET</footer>
+
+  <script>
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const modeEl = document.getElementById('mode');
+    const x0El = document.getElementById('x0');
+    const uEl = document.getElementById('u');
+    const accEl = document.getElementById('acc');
+    const totalTimeEl = document.getElementById('totalTime');
+    const animSpeedEl = document.getElementById('animSpeed');
+    const zoomEl = document.getElementById('zoom');
+    const showXTEl = document.getElementById('showXT');
+    const showVTEl = document.getElementById('showVT');
+    const showATEl = document.getElementById('showAT');
+    const showFormulaEl = document.getElementById('showFormula');
+
+    const x0Val = document.getElementById('x0Val');
+    const uVal = document.getElementById('uVal');
+    const aVal = document.getElementById('aVal');
+    const timeVal = document.getElementById('timeVal');
+    const speedVal = document.getElementById('speedVal');
+    const zoomVal = document.getElementById('zoomVal');
+
+    const currentTimeOut = document.getElementById('currentTimeOut');
+    const positionOut = document.getElementById('positionOut');
+    const velocityOut = document.getElementById('velocityOut');
+    const accOut = document.getElementById('accOut');
+    const displacementOut = document.getElementById('displacementOut');
+    const distanceOut = document.getElementById('distanceOut');
+    const areaOut = document.getElementById('areaOut');
+    const meaningOut = document.getElementById('meaningOut');
+    const statusEl = document.getElementById('status');
+    const formulaBox = document.getElementById('formulaBox');
+
+    const playBtn = document.getElementById('playBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const sampleBtn = document.getElementById('sampleBtn');
+    const formulaBtn = document.getElementById('formulaBtn');
+
+    let isPlaying = false;
+    let tLive = 0;
+    let lastFrame = null;
+
+    function fmt(num, unit = '') {
+      if (!Number.isFinite(num)) return '--';
+      return `${num.toFixed(2)} ${unit}`.trim();
+    }
+
+    function applyModeDefaults() {
+      const mode = modeEl.value;
+      if (mode === 'uniform') { accEl.value = 0; uEl.value = 5; }
+      if (mode === 'accelerated') { accEl.value = 2; uEl.value = 2; }
+      if (mode === 'decelerated') { accEl.value = -2; uEl.value = 12; }
+      if (mode === 'restThenMove') { accEl.value = 0; uEl.value = 0; }
+      if (mode === 'returnMotion') { accEl.value = -3; uEl.value = 15; }
+      resetSimulation(false);
+    }
+
+    function getParams() {
+      const mode = modeEl.value;
+      const x0 = Number(x0El.value);
+      let u = Number(uEl.value);
+      let a = Number(accEl.value);
+      const T = Number(totalTimeEl.value);
+      const anim = Number(animSpeedEl.value);
+      const zoom = Number(zoomEl.value);
+      return { mode, x0, u, a, T, anim, zoom };
+    }
+
+    function motionAt(t, p) {
+      if (p.mode === 'restThenMove') {
+        const tRest = p.T * 0.35;
+        if (t <= tRest) return { x: p.x0, v: 0, a: 0 };
+        const tt = t - tRest;
+        const v = 6;
+        return { x: p.x0 + v * tt, v, a: 0 };
+      }
+      const x = p.x0 + p.u * t + 0.5 * p.a * t * t;
+      const v = p.u + p.a * t;
+      return { x, v, a: p.a };
+    }
+
+    function computeDistance(p, uptoT) {
+      let dist = 0;
+      let prev = motionAt(0, p).x;
+      const steps = 300;
+      for (let i = 1; i <= steps; i++) {
+        const t = uptoT * i / steps;
+        const x = motionAt(t, p).x;
+        dist += Math.abs(x - prev);
+        prev = x;
+      }
+      return dist;
+    }
+
+    function updateUI(p) {
+      x0Val.textContent = `${p.x0} m`;
+      uVal.textContent = `${p.u} m/s`;
+      aVal.textContent = `${p.a} m/s²`;
+      timeVal.textContent = `${p.T} s`;
+      speedVal.textContent = `${p.anim.toFixed(1)}×`;
+      zoomVal.textContent = `${p.zoom.toFixed(1)}×`;
+      formulaBox.classList.toggle('hidden', !showFormulaEl.checked);
+
+      const t = Math.min(tLive, p.T);
+      const current = motionAt(t, p);
+      const start = motionAt(0, p).x;
+      const displacement = current.x - start;
+      const distance = computeDistance(p, t);
+
+      currentTimeOut.textContent = fmt(t, 's');
+      positionOut.textContent = fmt(current.x, 'm');
+      velocityOut.textContent = fmt(current.v, 'm/s');
+      accOut.textContent = fmt(current.a, 'm/s²');
+      displacementOut.textContent = fmt(displacement, 'm');
+      distanceOut.textContent = fmt(distance, 'm');
+      areaOut.textContent = fmt(displacement, 'm');
+
+      if (p.mode === 'uniform') meaningOut.textContent = 'x-t straight line; v-t horizontal';
+      else if (p.mode === 'accelerated') meaningOut.textContent = 'x-t curve; v-t rising line';
+      else if (p.mode === 'decelerated') meaningOut.textContent = 'v decreases with time';
+      else if (p.mode === 'restThenMove') meaningOut.textContent = 'first rest, then uniform motion';
+      else meaningOut.textContent = 'direction may change when v crosses zero';
+    }
+
+    function drawWatermark() {
+      ctx.save();
+      ctx.globalAlpha = 0.18;
+      ctx.fillStyle = '#0b2d5c';
+      ctx.textAlign = 'right';
+      ctx.font = 'bold 22px Arial';
+      ctx.fillText('Dr AI Academy', canvas.width - 30, canvas.height - 42);
+      ctx.font = '12px Arial';
+      ctx.fillText('AI Powered Physics for NEET', canvas.width - 30, canvas.height - 23);
+      ctx.restore();
+    }
+
+    function drawAxes(x, y, w, h, title, xLabel, yLabel) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.96)';
+      ctx.strokeStyle = '#dbe6f6';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, 14);
+      ctx.fill(); ctx.stroke();
+      const ox = x + 45;
+      const oy = y + h - 35;
+      const gx = x + w - 20;
+      const gy = y + 25;
+      ctx.strokeStyle = '#102033';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(ox, oy); ctx.lineTo(gx, oy);
+      ctx.moveTo(ox, oy); ctx.lineTo(ox, gy);
+      ctx.stroke();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 14px Arial';
+      ctx.fillText(title, x + 18, y + 22);
+      ctx.font = '12px Arial';
+      ctx.fillText(xLabel, gx - 25, oy + 22);
+      ctx.fillText(yLabel, ox - 34, gy + 10);
+      ctx.restore();
+      return { ox, oy, gx, gy, plotW: gx - ox, plotH: oy - gy };
+    }
+
+    function findRange(p, type) {
+      let min = Infinity, max = -Infinity;
+      for (let i = 0; i <= 200; i++) {
+        const t = p.T * i / 200;
+        const m = motionAt(t, p);
+        const val = type === 'x' ? m.x : type === 'v' ? m.v : m.a;
+        min = Math.min(min, val);
+        max = Math.max(max, val);
+      }
+      if (Math.abs(max - min) < 0.1) { max += 2; min -= 2; }
+      const pad = (max - min) * 0.18;
+      return { min: min - pad, max: max + pad };
+    }
+
+    function plotGraph(area, p, type, color, label) {
+      const range = findRange(p, type);
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      for (let i = 0; i <= 220; i++) {
+        const t = p.T * i / 220;
+        const m = motionAt(t, p);
+        const val = type === 'x' ? m.x : type === 'v' ? m.v : m.a;
+        const px = area.ox + (t / p.T) * area.plotW;
+        const py = area.oy - ((val - range.min) / (range.max - range.min)) * area.plotH;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+
+      const live = motionAt(Math.min(tLive, p.T), p);
+      const liveVal = type === 'x' ? live.x : type === 'v' ? live.v : live.a;
+      const lx = area.ox + (Math.min(tLive, p.T) / p.T) * area.plotW;
+      const ly = area.oy - ((liveVal - range.min) / (range.max - range.min)) * area.plotH;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(lx, ly, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.font = 'bold 12px Arial';
+      ctx.fillText(label, lx + 8, ly - 8);
+      ctx.restore();
+    }
+
+    function drawMotionTrack(p) {
+      const x = 70, y = 90, w = 820, h = 95;
+      const t = Math.min(tLive, p.T);
+      const current = motionAt(t, p);
+      const range = findRange(p, 'x');
+      const carX = x + 35 + ((current.x - range.min) / (range.max - range.min)) * (w - 70);
+
+      ctx.save();
+      ctx.fillStyle = 'rgba(247,250,255,0.98)';
+      ctx.strokeStyle = '#dbe6f6';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, 14);
+      ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = '#102033';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(x + 30, y + 68); ctx.lineTo(x + w - 30, y + 68); ctx.stroke();
+      ctx.fillStyle = '#1769ff';
+      ctx.beginPath();
+      ctx.roundRect(carX - 22, y + 36, 44, 25, 7);
+      ctx.fill();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 14px Arial';
+      ctx.fillText(`Moving body: x = ${current.x.toFixed(2)} m`, x + 18, y + 26);
+      if (showXTEl.checked) drawArrow(carX, y + 32, carX + Math.sign(current.v || 1) * 55, y + 32, '#0f9d58', 'v');
+      ctx.restore();
+    }
+
+    function drawArrow(x1, y1, x2, y2, color, label = '') {
+      const headLen = 10;
+      const a = Math.atan2(y2 - y1, x2 - x1);
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - headLen * Math.cos(a - Math.PI / 6), y2 - headLen * Math.sin(a - Math.PI / 6));
+      ctx.lineTo(x2 - headLen * Math.cos(a + Math.PI / 6), y2 - headLen * Math.sin(a + Math.PI / 6));
+      ctx.closePath(); ctx.fill();
+      if (label) { ctx.font = 'bold 13px Arial'; ctx.fillText(label, x2 + 8, y2 - 8); }
+      ctx.restore();
+    }
+
+    function drawConceptBox(p) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.96)';
+      ctx.strokeStyle = '#dbe6f6';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(48, 590, 850, 80, 14);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 16px Arial';
+      ctx.fillText('NEET Graph Rule', 70, 620);
+      ctx.font = '15px Arial';
+      ctx.fillText('x-t slope = velocity  |  v-t slope = acceleration  |  v-t area = displacement  |  a-t area = change in velocity', 70, 648);
+      ctx.restore();
+    }
+
+    function drawScene() {
+      const p = getParams();
+      updateUI(p);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.save();
+      ctx.strokeStyle = '#eef3fb';
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= canvas.width; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
+      for (let y = 0; y <= canvas.height; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
+      ctx.restore();
+
+      ctx.save();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 22px Arial';
+      ctx.fillText('Motion Graph Visualizer', 28, 38);
+      ctx.font = '15px Arial';
+      ctx.fillStyle = '#637083';
+      ctx.fillText('Learn graph interpretation using slope, area, and live motion.', 28, 62);
+      ctx.restore();
+
+      drawMotionTrack(p);
+
+      if (showXTEl.checked) {
+        const a1 = drawAxes(55, 215, 275, 330, 'x-t Graph', 't', 'x');
+        plotGraph(a1, p, 'x', '#1769ff', 'x');
+      }
+      if (showVTEl.checked) {
+        const a2 = drawAxes(345, 215, 275, 330, 'v-t Graph', 't', 'v');
+        plotGraph(a2, p, 'v', '#0f9d58', 'v');
+      }
+      if (showATEl.checked) {
+        const a3 = drawAxes(635, 215, 275, 330, 'a-t Graph', 't', 'a');
+        plotGraph(a3, p, 'a', '#d93025', 'a');
+      }
+
+      drawConceptBox(p);
+      drawWatermark();
+    }
+
+    function drawWatermark() {
+      ctx.save();
+      ctx.globalAlpha = 0.18;
+      ctx.fillStyle = '#0b2d5c';
+      ctx.textAlign = 'right';
+      ctx.font = 'bold 22px Arial';
+      ctx.fillText('Dr AI Academy', canvas.width - 30, canvas.height - 42);
+      ctx.font = '12px Arial';
+      ctx.fillText('AI Powered Physics for NEET', canvas.width - 30, canvas.height - 23);
+      ctx.restore();
+    }
+
+    function animate(timestamp) {
+      if (lastFrame === null) lastFrame = timestamp;
+      const dt = Math.min(0.04, (timestamp - lastFrame) / 1000);
+      lastFrame = timestamp;
+      const p = getParams();
+      if (isPlaying) {
+        tLive += dt * p.anim;
+        if (tLive >= p.T) {
+          tLive = p.T;
+          isPlaying = false;
+        }
+      }
+      drawScene();
+      requestAnimationFrame(animate);
+    }
+
+    function resetSimulation(redraw = true) {
+      isPlaying = false;
+      tLive = 0;
+      lastFrame = null;
+      if (redraw) drawScene();
+    }
+
+    [x0El, uEl, accEl, totalTimeEl, animSpeedEl, zoomEl, showXTEl, showVTEl, showATEl, showFormulaEl].forEach(el => {
+      el.addEventListener('input', () => { resetSimulation(); });
+      el.addEventListener('change', () => { resetSimulation(); });
+    });
+
+    modeEl.addEventListener('change', applyModeDefaults);
+    playBtn.addEventListener('click', () => { isPlaying = true; lastFrame = null; if (tLive >= getParams().T) tLive = 0; });
+    pauseBtn.addEventListener('click', () => { isPlaying = false; });
+    resetBtn.addEventListener('click', () => resetSimulation());
+    sampleBtn.addEventListener('click', () => {
+      modeEl.value = 'returnMotion';
+      x0El.value = 0;
+      uEl.value = 16;
+      accEl.value = -4;
+      totalTimeEl.value = 8;
+      resetSimulation();
+    });
+    formulaBtn.addEventListener('click', () => {
+      showFormulaEl.checked = !showFormulaEl.checked;
+      formulaBox.classList.toggle('hidden', !showFormulaEl.checked);
+      drawScene();
+    });
+
+    drawScene();
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>

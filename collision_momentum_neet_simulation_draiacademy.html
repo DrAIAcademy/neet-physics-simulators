@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEET Physics Simulation: Collision & Momentum</title>
+  <style>
+    :root {
+      --panel: #ffffff;
+      --ink: #102033;
+      --muted: #637083;
+      --blue: #1769ff;
+      --green: #0f9d58;
+      --orange: #f57c00;
+      --red: #d93025;
+      --purple: #7b1fa2;
+      --cyan: #00a9e8;
+      --line: #dbe6f6;
+      --soft: #f7faff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #eef5ff, #ffffff);
+      color: var(--ink);
+    }
+
+    header {
+      padding: 24px 18px;
+      text-align: center;
+      background: linear-gradient(135deg, #061d49, #0d6efd);
+      color: white;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: clamp(26px, 4vw, 44px);
+      letter-spacing: 0.3px;
+    }
+
+    header p { margin: 0; opacity: 0.94; font-size: 16px; }
+
+    .wrap {
+      max-width: 1240px;
+      margin: 22px auto;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 390px;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 12px 30px rgba(16, 32, 51, 0.08);
+      overflow: hidden;
+    }
+
+    .canvas-card { padding: 14px; position: relative; }
+
+    canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 14px;
+      background: white;
+      border: 1px solid #e6eefb;
+      cursor: crosshair;
+    }
+
+    #tooltip {
+      position: absolute;
+      display: none;
+      pointer-events: none;
+      max-width: 270px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(16, 32, 51, 0.96);
+      color: #fff;
+      font-size: 13px;
+      line-height: 1.42;
+      box-shadow: 0 10px 24px rgba(16,32,51,0.28);
+      z-index: 5;
+    }
+
+    .controls { padding: 18px; }
+    h2 { margin: 0 0 14px; font-size: 20px; }
+
+    .mode-box {
+      margin-bottom: 16px;
+      padding: 12px;
+      background: #f7faff;
+      border: 1px solid #e5eefb;
+      border-radius: 14px;
+    }
+
+    .control {
+      margin-bottom: 14px;
+      padding-bottom: 11px;
+      border-bottom: 1px dashed #d8e3f2;
+    }
+
+    .control:last-of-type { border-bottom: 0; margin-bottom: 12px; padding-bottom: 0; }
+
+    label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    label span { color: var(--blue); white-space: nowrap; }
+
+    input[type="range"], select { width: 100%; accent-color: var(--blue); }
+
+    select {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid #cbd9ec;
+      background: white;
+      color: var(--ink);
+      font-weight: 800;
+      font-size: 15px;
+    }
+
+    .toggle-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 8px;
+      background: #f7faff;
+      border: 1px solid #e5eefb;
+      border-radius: 12px;
+      padding: 9px 10px;
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: 0;
+      padding: 11px 10px;
+      border-radius: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      color: white;
+      background: var(--blue);
+      box-shadow: 0 8px 16px rgba(23, 105, 255, 0.2);
+    }
+
+    button:nth-child(2) { background: var(--orange); }
+    button:nth-child(3) { background: var(--red); }
+    button:nth-child(4) { background: var(--green); }
+    button:nth-child(5) { background: var(--purple); grid-column: 1 / -1; }
+
+    .hint {
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 12px;
+      background: #eef6ff;
+      border: 1px solid #d8eaff;
+      color: #0b45a0;
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: #f4f7fb;
+      border: 1px solid #dde8f6;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .content-grid {
+      max-width: 1240px;
+      margin: 0 auto 34px;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .data, .formula, .questions, .traps, .explain { padding: 18px; }
+
+    .status {
+      padding: 14px 16px;
+      border-radius: 14px;
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 16px;
+      text-align: center;
+      background: #eef6ff;
+      color: #0b45a0;
+      border: 1px solid #d8eaff;
+    }
+
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .stat {
+      background: var(--soft);
+      border: 1px solid #e5eefb;
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .stat b { display: block; color: var(--muted); font-size: 13px; margin-bottom: 5px; }
+    .stat span { font-size: 17px; font-weight: 900; }
+
+    .formula p, .questions li, .traps li, .explain li { line-height: 1.58; }
+
+    .formula-box {
+      background: #f8fbff;
+      border: 1px solid #deebff;
+      border-radius: 14px;
+      padding: 14px;
+      margin: 12px 0;
+      display: block;
+    }
+
+    .formula-box.hidden { display: none; }
+
+    .formula-box code {
+      display: block;
+      font-size: 17px;
+      padding: 4px 0;
+      color: #0b45a0;
+      white-space: normal;
+      font-weight: 800;
+    }
+
+    ol, ul { margin: 0; padding-left: 22px; }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      padding: 0 16px 26px;
+      font-size: 14px;
+    }
+
+    footer a {
+      color: #0b45a0;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 940px) {
+      .wrap, .content-grid { grid-template-columns: 1fr; }
+      .buttons { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Collision & Momentum Simulator</h1>
+    <p>NEET Physics Interactive Lab: conservation of momentum, elastic collision, inelastic collision, coefficient of restitution, and energy loss</p>
+  </header>
+
+  <main class="wrap">
+    <section class="card canvas-card">
+      <canvas id="simCanvas" width="960" height="740"></canvas>
+      <div id="tooltip"></div>
+      <div class="legend">
+        <span class="pill">Blue block: body A</span>
+        <span class="pill">Orange block: body B</span>
+        <span class="pill">Green arrows: velocity</span>
+        <span class="pill">Purple bars: momentum</span>
+        <span class="pill">Red bar: kinetic energy loss</span>
+      </div>
+    </section>
+
+    <aside class="card controls">
+      <h2>Controls</h2>
+
+      <div class="mode-box">
+        <label>Collision type</label>
+        <select id="mode">
+          <option value="elastic" selected>Perfectly elastic collision</option>
+          <option value="inelastic">Partially inelastic collision</option>
+          <option value="perfectInelastic">Perfectly inelastic / stick together</option>
+          <option value="explosion">Explosion / separation</option>
+        </select>
+      </div>
+
+      <div class="control"><label>Mass of A, m₁ <span id="m1Val">4.0 kg</span></label><input id="m1" type="range" min="0.5" max="20" step="0.5" value="4" /></div>
+      <div class="control"><label>Mass of B, m₂ <span id="m2Val">6.0 kg</span></label><input id="m2" type="range" min="0.5" max="20" step="0.5" value="6" /></div>
+      <div class="control"><label>Initial velocity of A, u₁ <span id="u1Val">8.0 m/s</span></label><input id="u1" type="range" min="-15" max="20" step="0.5" value="8" /></div>
+      <div class="control"><label>Initial velocity of B, u₂ <span id="u2Val">-2.0 m/s</span></label><input id="u2" type="range" min="-15" max="20" step="0.5" value="-2" /></div>
+      <div class="control"><label>Coefficient of restitution, e <span id="eVal">1.00</span></label><input id="rest" type="range" min="0" max="1" step="0.05" value="1" /></div>
+      <div class="control"><label>Animation speed <span id="speedVal">1.0×</span></label><input id="animSpeed" type="range" min="0.3" max="3" step="0.1" value="1" /></div>
+
+      <div class="toggle-row">
+        <label class="toggle"><input id="showVectors" type="checkbox" checked /> Velocity arrows</label>
+        <label class="toggle"><input id="showBars" type="checkbox" checked /> Momentum/KE bars</label>
+        <label class="toggle"><input id="showFormula" type="checkbox" checked /> Formulas</label>
+        <label class="toggle"><input id="showTooltips" type="checkbox" checked /> Hover info</label>
+      </div>
+
+      <div class="buttons">
+        <button id="playBtn">Play</button>
+        <button id="pauseBtn">Pause</button>
+        <button id="resetBtn">Reset</button>
+        <button id="sampleBtn">Sample NEET Case</button>
+        <button id="formulaBtn">Show/Hide Formulas</button>
+      </div>
+
+      <div class="hint">Tip: Momentum is always conserved in an isolated collision. Kinetic energy is conserved only in a perfectly elastic collision.</div>
+    </aside>
+  </main>
+
+  <section class="content-grid">
+    <section class="card data">
+      <h2>Live Values</h2>
+      <div id="status" class="status">Momentum before collision equals momentum after collision if no external force acts.</div>
+      <div class="stats">
+        <div class="stat"><b>Final velocity v₁</b><span id="v1Out">--</span></div>
+        <div class="stat"><b>Final velocity v₂</b><span id="v2Out">--</span></div>
+        <div class="stat"><b>Initial momentum</b><span id="piOut">--</span></div>
+        <div class="stat"><b>Final momentum</b><span id="pfOut">--</span></div>
+        <div class="stat"><b>Initial kinetic energy</b><span id="kiOut">--</span></div>
+        <div class="stat"><b>Final kinetic energy</b><span id="kfOut">--</span></div>
+        <div class="stat"><b>Energy loss</b><span id="lossOut">--</span></div>
+        <div class="stat"><b>Collision observation</b><span id="obsOut">--</span></div>
+      </div>
+    </section>
+
+    <section class="card formula">
+      <h2>Formula Explanation</h2>
+      <p>Collision problems are solved using conservation of momentum and coefficient of restitution.</p>
+      <div id="formulaBox" class="formula-box">
+        <code>Momentum: p = mv</code>
+        <code>Conservation of momentum: m₁u₁ + m₂u₂ = m₁v₁ + m₂v₂</code>
+        <code>Coefficient of restitution: e = (v₂ − v₁) / (u₁ − u₂)</code>
+        <code>Perfect elastic collision: e = 1 and kinetic energy is conserved</code>
+        <code>Perfect inelastic collision: e = 0 and bodies move together</code>
+        <code>Kinetic energy: K = ½mv²</code>
+        <code>Impulse: J = Δp = change in momentum</code>
+        <code>Explosion: initial momentum = final momentum</code>
+      </div>
+      <p><b>NEET key:</b> Momentum is vector quantity. Direction/sign of velocity must be taken carefully.</p>
+    </section>
+
+    <section class="card explain">
+      <h2>Simple NEET Explanation</h2>
+      <ul>
+        <li>Momentum means quantity of motion: p = mv.</li>
+        <li>In collision, total momentum remains conserved if external force is zero.</li>
+        <li>Elastic collision conserves both momentum and kinetic energy.</li>
+        <li>Inelastic collision conserves momentum but kinetic energy decreases.</li>
+        <li>Perfectly inelastic collision means bodies stick together after collision.</li>
+        <li>Coefficient of restitution tells how bouncy a collision is.</li>
+        <li>Impulse is change in momentum.</li>
+        <li>Velocity signs are very important in collision problems.</li>
+      </ul>
+    </section>
+
+    <section class="card traps">
+      <h2>NEET Traps</h2>
+      <ul>
+        <li>Momentum is conserved, kinetic energy may not be conserved.</li>
+        <li>Kinetic energy is conserved only in perfectly elastic collision.</li>
+        <li>Do not ignore negative sign of velocity.</li>
+        <li>Perfectly inelastic means both bodies have same final velocity.</li>
+        <li>Coefficient of restitution lies between 0 and 1 for normal cases.</li>
+        <li>Explosion also follows momentum conservation.</li>
+        <li>Momentum is vector; kinetic energy is scalar.</li>
+        <li>Equal and opposite impulses act on colliding bodies.</li>
+      </ul>
+    </section>
+
+    <section class="card questions" style="grid-column: 1 / -1; padding: 18px;">
+      <h2>NEET-Style Observation Questions</h2>
+      <ol>
+        <li>What quantity is always conserved in an isolated collision?</li>
+        <li>When is kinetic energy conserved in collision?</li>
+        <li>What does coefficient of restitution represent?</li>
+        <li>What is the final velocity condition in a perfectly inelastic collision?</li>
+        <li>Why are signs of velocity important in momentum problems?</li>
+        <li>What is impulse?</li>
+        <li>How is explosion related to conservation of momentum?</li>
+      </ol>
+    </section>
+  </section>
+
+  <footer><a href="https://courses.draiacademy.com" target="_blank" rel="noopener">Dr AI Academy</a> | AI Powered Physics for NEET</footer>
+
+  <script>
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    const tooltip = document.getElementById('tooltip');
+
+    const modeEl = document.getElementById('mode');
+    const m1El = document.getElementById('m1');
+    const m2El = document.getElementById('m2');
+    const u1El = document.getElementById('u1');
+    const u2El = document.getElementById('u2');
+    const restEl = document.getElementById('rest');
+    const animSpeedEl = document.getElementById('animSpeed');
+    const showVectorsEl = document.getElementById('showVectors');
+    const showBarsEl = document.getElementById('showBars');
+    const showFormulaEl = document.getElementById('showFormula');
+    const showTooltipsEl = document.getElementById('showTooltips');
+
+    const m1Val = document.getElementById('m1Val');
+    const m2Val = document.getElementById('m2Val');
+    const u1Val = document.getElementById('u1Val');
+    const u2Val = document.getElementById('u2Val');
+    const eVal = document.getElementById('eVal');
+    const speedVal = document.getElementById('speedVal');
+
+    const v1Out = document.getElementById('v1Out');
+    const v2Out = document.getElementById('v2Out');
+    const piOut = document.getElementById('piOut');
+    const pfOut = document.getElementById('pfOut');
+    const kiOut = document.getElementById('kiOut');
+    const kfOut = document.getElementById('kfOut');
+    const lossOut = document.getElementById('lossOut');
+    const obsOut = document.getElementById('obsOut');
+    const statusEl = document.getElementById('status');
+    const formulaBox = document.getElementById('formulaBox');
+
+    const playBtn = document.getElementById('playBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const sampleBtn = document.getElementById('sampleBtn');
+    const formulaBtn = document.getElementById('formulaBtn');
+
+    let isPlaying = false;
+    let lastFrame = null;
+    let t = 0;
+    let hoverItems = [];
+
+    function fmt(num, unit = '') {
+      if (!Number.isFinite(num)) return '--';
+      return `${num.toFixed(2)} ${unit}`.trim();
+    }
+
+    function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
+
+    function getParams() {
+      const mode = modeEl.value;
+      let m1 = Number(m1El.value);
+      let m2 = Number(m2El.value);
+      let u1 = Number(u1El.value);
+      let u2 = Number(u2El.value);
+      let e = Number(restEl.value);
+      const speed = Number(animSpeedEl.value);
+
+      if (mode === 'elastic') e = 1;
+      if (mode === 'perfectInelastic') e = 0;
+      if (mode === 'explosion') {
+        u1 = 0;
+        u2 = 0;
+        // Separation velocities after explosion based on momentum conservation.
+        const sep = Math.max(2, Number(u1El.value) + 8);
+        const v1 = -sep * m2 / (m1 + m2);
+        const v2 = sep * m1 / (m1 + m2);
+        const Pi = 0;
+        const Pf = m1 * v1 + m2 * v2;
+        const Ki = 0;
+        const Kf = 0.5 * m1 * v1 * v1 + 0.5 * m2 * v2 * v2;
+        return { mode, m1, m2, u1, u2, e: 1, v1, v2, speed, Pi, Pf, Ki, Kf, loss: Ki - Kf, obs: 'Explosion: momentum conserved, kinetic energy increases from internal energy.' };
+      }
+
+      const v1 = ((m1 - e * m2) * u1 + (1 + e) * m2 * u2) / (m1 + m2);
+      const v2 = ((m2 - e * m1) * u2 + (1 + e) * m1 * u1) / (m1 + m2);
+      const Pi = m1 * u1 + m2 * u2;
+      const Pf = m1 * v1 + m2 * v2;
+      const Ki = 0.5 * m1 * u1 * u1 + 0.5 * m2 * u2 * u2;
+      const Kf = 0.5 * m1 * v1 * v1 + 0.5 * m2 * v2 * v2;
+      const loss = Ki - Kf;
+      let obs = 'Momentum conserved.';
+      if (mode === 'elastic') obs = 'Elastic: momentum and kinetic energy conserved.';
+      if (mode === 'inelastic') obs = 'Inelastic: momentum conserved, kinetic energy decreases.';
+      if (mode === 'perfectInelastic') obs = 'Perfect inelastic: bodies stick together.';
+      return { mode, m1, m2, u1, u2, e, v1, v2, speed, Pi, Pf, Ki, Kf, loss, obs };
+    }
+
+    function updateUI(p) {
+      m1Val.textContent = `${p.m1.toFixed(1)} kg`;
+      m2Val.textContent = `${p.m2.toFixed(1)} kg`;
+      u1Val.textContent = `${Number(u1El.value).toFixed(1)} m/s`;
+      u2Val.textContent = `${Number(u2El.value).toFixed(1)} m/s`;
+      eVal.textContent = p.e.toFixed(2);
+      speedVal.textContent = `${p.speed.toFixed(1)}×`;
+      formulaBox.classList.toggle('hidden', !showFormulaEl.checked);
+
+      v1Out.textContent = fmt(p.v1, 'm/s');
+      v2Out.textContent = fmt(p.v2, 'm/s');
+      piOut.textContent = fmt(p.Pi, 'kg·m/s');
+      pfOut.textContent = fmt(p.Pf, 'kg·m/s');
+      kiOut.textContent = fmt(p.Ki, 'J');
+      kfOut.textContent = fmt(p.Kf, 'J');
+      lossOut.textContent = fmt(p.loss, 'J');
+      obsOut.textContent = p.obs;
+
+      if (p.mode === 'elastic') statusEl.textContent = 'Perfectly elastic collision: momentum and kinetic energy both remain conserved.';
+      if (p.mode === 'inelastic') statusEl.textContent = 'Partially inelastic collision: momentum remains conserved, kinetic energy decreases.';
+      if (p.mode === 'perfectInelastic') statusEl.textContent = 'Perfectly inelastic collision: bodies move together after collision.';
+      if (p.mode === 'explosion') statusEl.textContent = 'Explosion: bodies separate but total momentum remains conserved.';
+    }
+
+    function addHover(x, y, w, h, title, text) {
+      hoverItems.push({ x, y, w, h, title, text });
+    }
+
+    function drawWatermark() {
+      ctx.save();
+      ctx.globalAlpha = 0.18;
+      ctx.fillStyle = '#0b2d5c';
+      ctx.textAlign = 'right';
+      ctx.font = 'bold 22px Arial';
+      ctx.fillText('Dr AI Academy', canvas.width - 30, canvas.height - 42);
+      ctx.font = '12px Arial';
+      ctx.fillText('AI Powered Physics for NEET', canvas.width - 30, canvas.height - 23);
+      ctx.restore();
+    }
+
+    function drawArrow(x1, y1, x2, y2, color, label = '') {
+      const headLen = 11;
+      const a = Math.atan2(y2 - y1, x2 - x1);
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - headLen * Math.cos(a - Math.PI / 6), y2 - headLen * Math.sin(a - Math.PI / 6));
+      ctx.lineTo(x2 - headLen * Math.cos(a + Math.PI / 6), y2 - headLen * Math.sin(a + Math.PI / 6));
+      ctx.closePath(); ctx.fill();
+      if (label) { ctx.font = 'bold 13px Arial'; ctx.fillText(label, x2 + 8, y2 - 8); }
+      ctx.restore();
+    }
+
+    function drawBlock(x, y, w, h, color, label, mass, velocity) {
+      ctx.save();
+      ctx.fillStyle = color;
+      ctx.strokeStyle = '#102033';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.roundRect(x - w / 2, y - h / 2, w, h, 12); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 16px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(label, x, y - 9);
+      ctx.font = 'bold 13px Arial';
+      ctx.fillText(`${mass.toFixed(1)} kg`, x, y + 12);
+      ctx.restore();
+      addHover(x - w / 2, y - h / 2, w, h, label, `This is ${label}. Its momentum is p = mv. Bigger mass or bigger velocity gives larger momentum.`);
+      if (showVectorsEl.checked && Math.abs(velocity) > 0.01) {
+        const len = clamp(Math.abs(velocity) * 8, 25, 120);
+        const dir = velocity >= 0 ? 1 : -1;
+        drawArrow(x, y - h / 2 - 18, x + dir * len, y - h / 2 - 18, '#0f9d58', `v=${velocity.toFixed(1)}`);
+        addHover(Math.min(x, x + dir * len) - 8, y - h / 2 - 35, Math.abs(len) + 16, 34, 'Velocity arrow', 'Velocity is a vector. Its sign/direction is very important in collision numericals.');
+      }
+    }
+
+    function drawTrackAndCollision(p) {
+      const y = 355;
+      const start1 = 180;
+      const start2 = 710;
+      const collide1 = 430;
+      const collide2 = 530;
+      let x1, x2, vel1, vel2;
+      const pre = Math.min(1, t / 2.6);
+      const post = Math.max(0, (t - 2.6) / 2.8);
+
+      if (p.mode === 'explosion') {
+        const center1 = 455;
+        const center2 = 505;
+        x1 = center1 + post * p.v1 * 18;
+        x2 = center2 + post * p.v2 * 18;
+        vel1 = post > 0 ? p.v1 : 0;
+        vel2 = post > 0 ? p.v2 : 0;
+      } else if (pre < 1) {
+        x1 = start1 + (collide1 - start1) * pre;
+        x2 = start2 + (collide2 - start2) * pre;
+        vel1 = p.u1;
+        vel2 = p.u2;
+      } else {
+        x1 = collide1 + post * p.v1 * 18;
+        x2 = collide2 + post * p.v2 * 18;
+        vel1 = p.v1;
+        vel2 = p.v2;
+        if (p.mode === 'perfectInelastic') {
+          const together = (x1 + x2) / 2;
+          x1 = together - 50;
+          x2 = together + 50;
+        }
+      }
+
+      x1 = clamp(x1, 90, 855);
+      x2 = clamp(x2, 100, 870);
+
+      ctx.save();
+      ctx.fillStyle = '#dbeafe';
+      ctx.strokeStyle = '#1769ff';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.roundRect(65, y + 45, 830, 35, 10); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#102033';
+      ctx.font = 'bold 14px Arial';
+      ctx.fillText('Smooth horizontal track: external horizontal force ≈ 0', 85, y + 68);
+      ctx.strokeStyle = 'rgba(217,48,37,0.65)';
+      ctx.setLineDash([8, 7]);
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(480, y - 120); ctx.lineTo(480, y + 90); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#d93025';
+      ctx.fillText(p.mode === 'explosion' ? 'Explosion point' : 'Collision zone', 432, y - 128);
+      ctx.restore();
+      addHover(430, y - 145, 115, 245, p.mode === 'explosion' ? 'Explosion point' : 'Collision zone', p.mode === 'explosion' ? 'At this point internal energy separates the bodies. Total momentum is still conserved.' : 'Collision happens here. During collision, bodies exert equal and opposite impulses on each other.');
+
+      drawBlock(x1, y, 90, 70, '#1769ff', 'Body A', p.m1, vel1);
+      drawBlock(x2, y, 90, 70, '#f57c00', 'Body B', p.m2, vel2);
+
+      if (p.mode !== 'explosion' && Math.abs(pre - 1) < 0.06) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(217,48,37,0.18)';
+        ctx.strokeStyle = '#d93025';
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(480, y, 58, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#d93025'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center'; ctx.fillText('Impulse', 480, y + 5);
+        ctx.restore();
+      }
+    }
+
+    function drawBars(p) {
+      if (!showBarsEl.checked) return;
+      const x = 610, y = 100, w = 310, h = 210;
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.96)';
+      ctx.strokeStyle = '#dbe6f6';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(x, y, w, h, 14); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#102033'; ctx.font = 'bold 16px Arial'; ctx.fillText('Momentum & Energy Panel', x + 18, y + 28);
+      const maxP = Math.max(1, Math.abs(p.Pi), Math.abs(p.Pf));
+      const maxK = Math.max(1, p.Ki, p.Kf, Math.abs(p.loss));
+      drawBar(x + 55, y + 165, p.Pi / maxP, '#7b1fa2', 'Pi');
+      drawBar(x + 105, y + 165, p.Pf / maxP, '#7b1fa2', 'Pf');
+      drawBar(x + 175, y + 165, p.Ki / maxK, '#1769ff', 'Ki');
+      drawBar(x + 225, y + 165, p.Kf / maxK, '#0f9d58', 'Kf');
+      drawBar(x + 275, y + 165, Math.max(0, p.loss) / maxK, '#d93025', 'Loss');
+      ctx.restore();
+      addHover(x, y, w, h, 'Momentum & Energy Panel', 'Momentum before and after should match. Kinetic energy remains same only in elastic collision; loss appears in inelastic collision.');
+    }
+
+    function drawBar(x, baseY, ratio, color, label) {
+      const h = Math.abs(ratio) * 95;
+      ctx.save();
+      ctx.fillStyle = color;
+      if (ratio >= 0) ctx.fillRect(x - 14, baseY - h, 28, h);
+      else ctx.fillRect(x - 14, baseY, 28, h);
+      ctx.fillStyle = '#102033'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center';
+      ctx.fillText(label, x, baseY + 22);
+      ctx.restore();
+    }
+
+    function drawEquationBox(p) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.96)';
+      ctx.strokeStyle = '#dbe6f6';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(45, 90, 535, 140, 14); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#102033'; ctx.font = 'bold 17px Arial'; ctx.fillText('Collision Rule', 65, 123);
+      ctx.font = '15px Arial';
+      ctx.fillText('Total momentum before = Total momentum after', 65, 153);
+      ctx.fillStyle = '#0b45a0'; ctx.font = 'bold 16px Arial';
+      ctx.fillText(`m₁u₁ + m₂u₂ = ${p.Pi.toFixed(2)} kg·m/s`, 65, 183);
+      ctx.fillText(`m₁v₁ + m₂v₂ = ${p.Pf.toFixed(2)} kg·m/s`, 65, 210);
+      ctx.restore();
+      addHover(45, 90, 535, 140, 'Momentum conservation equation', 'This equation is the core of collision numericals. Use signs for direction, then solve for final velocities.');
+    }
+
+    function drawHoverHint() {
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.96)';
+      ctx.strokeStyle = '#dbe6f6'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(50, 610, 850, 70, 14); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#102033'; ctx.font = 'bold 15px Arial';
+      ctx.fillText('Hover Tip: Move your mouse over blocks, arrows, collision zone, equation box, or energy panel to learn their role.', 72, 650);
+      ctx.restore();
+    }
+
+    function drawScene() {
+      const p = getParams();
+      updateUI(p);
+      hoverItems = [];
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.save();
+      ctx.strokeStyle = '#eef3fb'; ctx.lineWidth = 1;
+      for (let x = 0; x <= canvas.width; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
+      for (let y = 0; y <= canvas.height; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
+      ctx.restore();
+
+      ctx.save();
+      ctx.fillStyle = '#102033'; ctx.font = 'bold 22px Arial'; ctx.fillText('Collision & Momentum Visualizer', 28, 38);
+      ctx.font = '15px Arial'; ctx.fillStyle = '#637083'; ctx.fillText('Watch before/after collision and compare momentum and kinetic energy.', 28, 62);
+      ctx.restore();
+
+      drawEquationBox(p);
+      drawBars(p);
+      drawTrackAndCollision(p);
+      drawHoverHint();
+      drawWatermark();
+    }
+
+    function animate(timestamp) {
+      if (lastFrame === null) lastFrame = timestamp;
+      const dt = Math.min(0.04, (timestamp - lastFrame) / 1000);
+      lastFrame = timestamp;
+      const p = getParams();
+      if (isPlaying) {
+        t += dt * p.speed;
+        if (t > 5.4) {
+          t = 5.4;
+          isPlaying = false;
+        }
+      }
+      drawScene();
+      requestAnimationFrame(animate);
+    }
+
+    function resetSimulation(redraw = true) {
+      isPlaying = false;
+      t = 0;
+      lastFrame = null;
+      tooltip.style.display = 'none';
+      if (redraw) drawScene();
+    }
+
+    function canvasPoint(evt) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (evt.clientX - rect.left) * canvas.width / rect.width,
+        y: (evt.clientY - rect.top) * canvas.height / rect.height,
+        cssX: evt.clientX - rect.left,
+        cssY: evt.clientY - rect.top
+      };
+    }
+
+    canvas.addEventListener('mousemove', (evt) => {
+      if (!showTooltipsEl.checked) { tooltip.style.display = 'none'; return; }
+      const p = canvasPoint(evt);
+      const item = hoverItems.find(it => p.x >= it.x && p.x <= it.x + it.w && p.y >= it.y && p.y <= it.y + it.h);
+      if (item) {
+        tooltip.innerHTML = `<strong>${item.title}</strong><br>${item.text}`;
+        tooltip.style.display = 'block';
+        tooltip.style.left = `${Math.min(p.cssX + 14, canvas.clientWidth - 285)}px`;
+        tooltip.style.top = `${Math.max(12, p.cssY + 14)}px`;
+      } else {
+        tooltip.style.display = 'none';
+      }
+    });
+
+    canvas.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+
+    [modeEl, m1El, m2El, u1El, u2El, restEl, animSpeedEl, showVectorsEl, showBarsEl, showFormulaEl, showTooltipsEl].forEach(el => {
+      el.addEventListener('input', () => resetSimulation());
+      el.addEventListener('change', () => resetSimulation());
+    });
+
+    modeEl.addEventListener('change', () => {
+      if (modeEl.value === 'elastic') restEl.value = 1;
+      if (modeEl.value === 'perfectInelastic') restEl.value = 0;
+      if (modeEl.value === 'inelastic' && Number(restEl.value) === 1) restEl.value = 0.5;
+      resetSimulation();
+    });
+
+    playBtn.addEventListener('click', () => { isPlaying = true; lastFrame = null; if (t >= 5.4) t = 0; });
+    pauseBtn.addEventListener('click', () => { isPlaying = false; });
+    resetBtn.addEventListener('click', () => resetSimulation());
+    sampleBtn.addEventListener('click', () => {
+      modeEl.value = 'inelastic'; m1El.value = 3; m2El.value = 5; u1El.value = 12; u2El.value = -3; restEl.value = 0.4; resetSimulation();
+    });
+    formulaBtn.addEventListener('click', () => {
+      showFormulaEl.checked = !showFormulaEl.checked;
+      formulaBox.classList.toggle('hidden', !showFormulaEl.checked);
+      drawScene();
+    });
+
+    drawScene();
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>

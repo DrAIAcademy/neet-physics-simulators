@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEET Physics Simulation: Pulley & Block System</title>
+  <style>
+    :root {
+      --panel: #ffffff;
+      --ink: #102033;
+      --muted: #637083;
+      --blue: #1769ff;
+      --green: #0f9d58;
+      --orange: #f57c00;
+      --red: #d93025;
+      --purple: #7b1fa2;
+      --cyan: #00a9e8;
+      --line: #dbe6f6;
+      --soft: #f7faff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #eef5ff, #ffffff);
+      color: var(--ink);
+    }
+
+    header {
+      padding: 24px 18px;
+      text-align: center;
+      background: linear-gradient(135deg, #061d49, #0d6efd);
+      color: white;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: clamp(26px, 4vw, 44px);
+      letter-spacing: 0.3px;
+    }
+
+    header p { margin: 0; opacity: 0.94; font-size: 16px; }
+
+    .wrap {
+      max-width: 1240px;
+      margin: 22px auto;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 390px;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 12px 30px rgba(16, 32, 51, 0.08);
+      overflow: hidden;
+    }
+
+    .canvas-card { padding: 14px; }
+
+    canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 14px;
+      background: white;
+      border: 1px solid #e6eefb;
+    }
+
+    .controls { padding: 18px; }
+    h2 { margin: 0 0 14px; font-size: 20px; }
+
+    .mode-box {
+      margin-bottom: 16px;
+      padding: 12px;
+      background: #f7faff;
+      border: 1px solid #e5eefb;
+      border-radius: 14px;
+    }
+
+    .control {
+      margin-bottom: 14px;
+      padding-bottom: 11px;
+      border-bottom: 1px dashed #d8e3f2;
+    }
+
+    .control:last-of-type { border-bottom: 0; margin-bottom: 12px; padding-bottom: 0; }
+
+    label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    label span { color: var(--blue); white-space: nowrap; }
+
+    input[type="range"], select { width: 100%; accent-color: var(--blue); }
+
+    select {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid #cbd9ec;
+      background: white;
+      color: var(--ink);
+      font-weight: 800;
+      font-size: 15px;
+    }
+
+    .toggle-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 8px;
+      background: #f7faff;
+      border: 1px solid #e5eefb;
+      border-radius: 12px;
+      padding: 9px 10px;
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: 0;
+      padding: 11px 10px;
+      border-radius: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      color: white;
+      background: var(--blue);
+      box-shadow: 0 8px 16px rgba(23, 105, 255, 0.2);
+    }
+
+    button:nth-child(2) { background: var(--orange); }
+    button:nth-child(3) { background: var(--red); }
+    button:nth-child(4) { background: var(--green); }
+    button:nth-child(5) { background: var(--purple); grid-column: 1 / -1; }
+
+    .hint {
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 12px;
+      background: #eef6ff;
+      border: 1px solid #d8eaff;
+      color: #0b45a0;
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: #f4f7fb;
+      border: 1px solid #dde8f6;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .content-grid {
+      max-width: 1240px;
+      margin: 0 auto 34px;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .data, .formula, .questions, .traps, .explain { padding: 18px; }
+
+    .status {
+      padding: 14px 16px;
+      border-radius: 14px;
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 16px;
+      text-align: center;
+      background: #eef6ff;
+      color: #0b45a0;
+      border: 1px solid #d8eaff;
+    }
+
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .stat {
+      background: var(--soft);
+      border: 1px solid #e5eefb;
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .stat b { display: block; color: var(--muted); font-size: 13px; margin-bottom: 5px; }
+    .stat span { font-size: 17px; font-weight: 900; }
+
+    .formula p, .questions li, .traps li, .explain li { line-height: 1.58; }
+
+    .formula-box {
+      background: #f8fbff;
+      border: 1px solid #deebff;
+      border-radius: 14px;
+      padding: 14px;
+      margin: 12px 0;
+      display: block;
+    }
+
+    .formula-box.hidden { display: none; }
+
+    .formula-box code {
+      display: block;
+      font-size: 17px;
+      padding: 4px 0;
+      color: #0b45a0;
+      white-space: normal;
+      font-weight: 800;
+    }
+
+    ol, ul { margin: 0; padding-left: 22px; }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      padding: 0 16px 26px;
+      font-size: 14px;
+    }
+
+    footer a {
+      color: #0b45a0;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 940px) {
+      .wrap, .content-grid { grid-template-columns: 1fr; }
+      .buttons { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Pulley & Block System Simulator</h1>
+    <p>NEET Physics Interactive Lab: Atwood machine, table-block pulley, tension, acceleration, FBD, and friction</p>
+  </header>
+
+  <main class="wrap">
+    <section class="card canvas-card">
+      <canvas id="simCanvas" width="960" height="740"></canvas>
+      <div class="legend">
+        <span class="pill">Blue: string and pulley</span>
+        <span class="pill">Green: tension</span>
+        <span class="pill">Red: weight / net force</span>
+        <span class="pill">Purple: acceleration</span>
+        <span class="pill">Orange: friction</span>
+        <span class="pill">Watermark: Dr AI Academy</span>
+      </div>
+    </section>
+
+    <aside class="card controls">
+      <h2>Controls</h2>
+
+      <div class="mode-box">
+        <label>System type</label>
+        <select id="mode">
+          <option value="atwood" selected>Atwood machine</option>
+          <option value="table">Block on table + hanging mass</option>
+          <option value="roughTable">Rough table + hanging mass</option>
+          <option value="incline">Inclined plane + hanging mass</option>
+        </select>
+      </div>
+
+      <div class="control"><label>Mass m₁ <span id="m1Val">4.0 kg</span></label><input id="m1" type="range" min="0.5" max="20" step="0.5" value="4" /></div>
+      <div class="control"><label>Mass m₂ <span id="m2Val">7.0 kg</span></label><input id="m2" type="range" min="0.5" max="20" step="0.5" value="7" /></div>
+      <div class="control"><label>Friction coefficient μ <span id="muVal">0.20</span></label><input id="mu" type="range" min="0" max="1" step="0.05" value="0.2" /></div>
+      <div class="control"><label>Incline angle θ <span id="thetaVal">30°</span></label><input id="theta" type="range" min="5" max="60" step="1" value="30" /></div>
+      <div class="control"><label>Gravity g <span id="gVal">9.8 m/s²</span></label><input id="gravity" type="range" min="1" max="15" step="0.1" value="9.8" /></div>
+      <div class="control"><label>Animation speed <span id="speedVal">1.0×</span></label><input id="animSpeed" type="range" min="0.3" max="3" step="0.1" value="1" /></div>
+
+      <div class="toggle-row">
+        <label class="toggle"><input id="showForces" type="checkbox" checked /> Forces</label>
+        <label class="toggle"><input id="showFBD" type="checkbox" checked /> FBD</label>
+        <label class="toggle"><input id="showMotion" type="checkbox" checked /> Motion path</label>
+        <label class="toggle"><input id="showFormula" type="checkbox" checked /> Formulas</label>
+      </div>
+
+      <div class="buttons">
+        <button id="playBtn">Play</button>
+        <button id="pauseBtn">Pause</button>
+        <button id="resetBtn">Reset</button>
+        <button id="balanceBtn">Balance Case</button>
+        <button id="formulaBtn">Show/Hide Formulas</button>
+      </div>
+
+      <div class="hint">Tip: Draw FBD first. Then write equations along direction of acceleration. Tension is same in ideal string and pulley.</div>
+    </aside>
+  </main>
+
+  <section class="content-grid">
+    <section class="card data">
+      <h2>Live Values</h2>
+      <div id="status" class="status">Atwood machine: heavier mass moves down and lighter mass moves up.</div>
+      <div class="stats">
+        <div class="stat"><b>Acceleration</b><span id="accOut">--</span></div>
+        <div class="stat"><b>Tension</b><span id="tensionOut">--</span></div>
+        <div class="stat"><b>Driving force</b><span id="driveOut">--</span></div>
+        <div class="stat"><b>Friction force</b><span id="frictionOut">--</span></div>
+        <div class="stat"><b>Normal reaction</b><span id="normalOut">--</span></div>
+        <div class="stat"><b>Weight m₁g</b><span id="w1Out">--</span></div>
+        <div class="stat"><b>Weight m₂g</b><span id="w2Out">--</span></div>
+        <div class="stat"><b>Motion condition</b><span id="conditionOut">--</span></div>
+      </div>
+    </section>
+
+    <section class="card formula">
+      <h2>Formula Explanation</h2>
+      <p>Pulley problems become easy when each block is treated separately using FBD.</p>
+      <div id="formulaBox" class="formula-box">
+        <code>Atwood machine: a = (m₂ − m₁)g / (m₁ + m₂)</code>
+        <code>Atwood tension: T = m₁(g + a) = m₂(g − a)</code>
+        <code>Table + hanging mass: a = m₂g / (m₁ + m₂)</code>
+        <code>Rough table: a = (m₂g − μm₁g) / (m₁ + m₂)</code>
+        <code>Friction: f = μN</code>
+        <code>Incline component: m₁g sinθ down the plane</code>
+        <code>Normal on incline: N = m₁g cosθ</code>
+        <code>Ideal string and pulley: tension is same throughout the string</code>
+      </div>
+      <p><b>NEET key:</b> Tension is not always equal to weight. It depends on acceleration.</p>
+    </section>
+
+    <section class="card explain">
+      <h2>Simple NEET Explanation</h2>
+      <ul>
+        <li>A pulley changes the direction of tension.</li>
+        <li>For an ideal string and pulley, tension is the same throughout the string.</li>
+        <li>Acceleration of connected blocks has the same magnitude.</li>
+        <li>In Atwood machine, heavier mass moves down and lighter mass moves up.</li>
+        <li>In table-block system, hanging mass pulls the block on the table.</li>
+        <li>Friction opposes the motion or tendency of motion.</li>
+        <li>Always draw FBD separately for each block.</li>
+        <li>Choose positive direction along acceleration to avoid sign mistakes.</li>
+      </ul>
+    </section>
+
+    <section class="card traps">
+      <h2>NEET Traps</h2>
+      <ul>
+        <li>Tension is not equal to weight unless acceleration condition allows it.</li>
+        <li>Both connected blocks have same acceleration magnitude in ideal string.</li>
+        <li>Friction acts opposite to motion or tendency of motion.</li>
+        <li>Normal reaction on incline is mg cosθ, not mg.</li>
+        <li>Component along incline is mg sinθ.</li>
+        <li>Do not use one combined equation before understanding directions.</li>
+        <li>If driving force is less than friction limit, system may remain at rest.</li>
+        <li>Massless string and frictionless pulley are ideal assumptions.</li>
+      </ul>
+    </section>
+
+    <section class="card questions" style="grid-column: 1 / -1; padding: 18px;">
+      <h2>NEET-Style Observation Questions</h2>
+      <ol>
+        <li>In an Atwood machine, what happens when m₂ is greater than m₁?</li>
+        <li>Why is tension same throughout an ideal string?</li>
+        <li>Why is tension not always equal to weight?</li>
+        <li>In table-pulley system, what force drives the motion?</li>
+        <li>How does friction affect acceleration?</li>
+        <li>What is the component of weight along an inclined plane?</li>
+        <li>Why should FBD be drawn separately for each block?</li>
+      </ol>
+    </section>
+  </section>
+
+  <footer><a href="https://courses.draiacademy.com" target="_blank" rel="noopener">Dr AI Academy</a> | AI Powered Physics for NEET</footer>
+
+  <script>
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const modeEl = document.getElementById('mode');
+    const m1El = document.getElementById('m1');
+    const m2El = document.getElementById('m2');
+    const muEl = document.getElementById('mu');
+    const thetaEl = document.getElementById('theta');
+    const gravityEl = document.getElementById('gravity');
+    const animSpeedEl = document.getElementById('animSpeed');
+    const showForcesEl = document.getElementById('showForces');
+    const showFBDEl = document.getElementById('showFBD');
+    const showMotionEl = document.getElementById('showMotion');
+    const showFormulaEl = document.getElementById('showFormula');
+
+    const m1Val = document.getElementById('m1Val');
+    const m2Val = document.getElementById('m2Val');
+    const muVal = document.getElementById('muVal');
+    const thetaVal = document.getElementById('thetaVal');
+    const gVal = document.getElementById('gVal');
+    const speedVal = document.getElementById('speedVal');
+
+    const accOut = document.getElementById('accOut');
+    const tensionOut = document.getElementById('tensionOut');
+    const driveOut = document.getElementById('driveOut');
+    const frictionOut = document.getElementById('frictionOut');
+    const normalOut = document.getElementById('normalOut');
+    const w1Out = document.getElementById('w1Out');
+    const w2Out = document.getElementById('w2Out');
+    const conditionOut = document.getElementById('conditionOut');
+    const statusEl = document.getElementById('status');
+    const formulaBox = document.getElementById('formulaBox');
+
+    const playBtn = document.getElementById('playBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const balanceBtn = document.getElementById('balanceBtn');
+    const formulaBtn = document.getElementById('formulaBtn');
+
+    let isPlaying = false;
+    let lastFrame = null;
+    let offset = 0;
+
+    function fmt(num, unit = '') {
+      if (!Number.isFinite(num)) return '--';
+      return `${num.toFixed(2)} ${unit}`.trim();
+    }
+
+    function degToRad(deg) { return deg * Math.PI / 180; }
+
+    function getParams() {
+      const mode = modeEl.value;
+      const m1 = Number(m1El.value);
+      const m2 = Number(m2El.value);
+      const mu = Number(muEl.value);
+      const theta = Number(thetaEl.value);
+      const g = Number(gravityEl.value);
+      const speed = Number(animSpeedEl.value);
+      const w1 = m1 * g;
+      const w2 = m2 * g;
+      let a = 0, T = 0, drive = 0, friction = 0, normal = 0, condition = '', direction = 1;
+
+      if (mode === 'atwood') {
+        drive = Math.abs(w2 - w1);
+        a = ((m2 - m1) * g) / (m1 + m2);
+        direction = a >= 0 ? 1 : -1;
+        T = m1 * (g + Math.abs(a));
+        friction = 0;
+        normal = 0;
+        condition = Math.abs(a) < 0.001 ? 'Balanced' : (m2 > m1 ? 'm₂ down, m₁ up' : 'm₁ down, m₂ up');
+      }
+
+      if (mode === 'table' || mode === 'roughTable') {
+        normal = w1;
+        friction = mode === 'roughTable' ? mu * normal : 0;
+        drive = w2 - friction;
+        a = Math.max(0, drive / (m1 + m2));
+        T = m1 * a + friction;
+        direction = 1;
+        condition = drive <= 0 ? 'May stay at rest' : 'm₂ pulls m₁';
+      }
+
+      if (mode === 'incline') {
+        const sin = Math.sin(degToRad(theta));
+        const cos = Math.cos(degToRad(theta));
+        normal = m1 * g * cos;
+        const inclineDown = m1 * g * sin;
+        const frictionLimit = mu * normal;
+        const netTowardM2 = w2 - inclineDown;
+        direction = netTowardM2 >= 0 ? 1 : -1; // + means m2 down, block up incline.
+        friction = frictionLimit;
+        drive = Math.abs(netTowardM2) - friction;
+        if (drive <= 0) {
+          a = 0;
+          T = w2;
+          condition = 'Can remain at rest';
+        } else {
+          a = drive / (m1 + m2);
+          if (direction > 0) T = m1 * a + inclineDown + friction;
+          else T = inclineDown - friction - m1 * a;
+          condition = direction > 0 ? 'm₂ down, m₁ up incline' : 'm₁ down incline, m₂ up';
+        }
+      }
+
+      return { mode, m1, m2, mu, theta, g, speed, w1, w2, a: Math.abs(a), signedA: a, T, drive, friction, normal, condition, direction };
+    }
+
+    function updateUI(p) {
+      m1Val.textContent = `${p.m1.toFixed(1)} kg`;
+      m2Val.textContent = `${p.m2.toFixed(1)} kg`;
+      muVal.textContent = p.mu.toFixed(2);
+      thetaVal.textContent = `${p.theta}°`;
+      gVal.textContent = `${p.g.toFixed(1)} m/s²`;
+      speedVal.textContent = `${p.speed.toFixed(1)}×`;
+      formulaBox.classList.toggle('hidden', !showFormulaEl.checked);
+
+      accOut.textContent = fmt(p.a, 'm/s²');
+      tensionOut.textContent = fmt(Math.abs(p.T), 'N');
+      driveOut.textContent = fmt(Math.max(0, p.drive), 'N');
+      frictionOut.textContent = fmt(p.friction, 'N');
+      normalOut.textContent = p.normal > 0 ? fmt(p.normal, 'N') : 'Not applicable';
+      w1Out.textContent = fmt(p.w1, 'N');
+      w2Out.textContent = fmt(p.w2, 'N');
+      conditionOut.textContent = p.condition;
+
+      if (p.mode === 'atwood') statusEl.textContent = 'Atwood machine: acceleration depends on mass difference.';
+      if (p.mode === 'table') statusEl.textContent = 'Table-pulley system: hanging mass provides the driving force.';
+      if (p.mode === 'roughTable') statusEl.textContent = 'Rough table: friction reduces acceleration and may stop motion.';
+      if (p.mode === 'incline') statusEl.textContent = 'Incline-pulley system: compare hanging weight with m₁g sinθ and friction.';
+    }
+
+    function drawWatermark() {
+      ctx.save();
+      ctx.globalAlpha = 0.18;
+      ctx.fillStyle = '#0b2d5c';
+      ctx.textAlign = 'right';
+      ctx.font = 'bold 22px Arial';
+      ctx.fillText('Dr AI Academy', canvas.width - 30, canvas.height - 42);
+      ctx.font = '12px Arial';
+      ctx.fillText('AI Powered Physics for NEET', canvas.width - 30, canvas.height - 23);
+      ctx.restore();
+    }
+
+    function drawArrow(x1, y1, x2, y2, color, label = '') {
+      const headLen = 11;
+      const a = Math.atan2(y2 - y1, x2 - x1);
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - headLen * Math.cos(a - Math.PI / 6), y2 - headLen * Math.sin(a - Math.PI / 6));
+      ctx.lineTo(x2 - headLen * Math.cos(a + Math.PI / 6), y2 - headLen * Math.sin(a + Math.PI / 6));
+      ctx.closePath(); ctx.fill();
+      if (label) { ctx.font = 'bold 13px Arial'; ctx.fillText(label, x2 + 8, y2 - 8); }
+      ctx.restore();
+    }
+
+    function drawPulley(x, y, r) {
+      ctx.save();
+      ctx.fillStyle = '#f7faff';
+      ctx.strokeStyle = '#1769ff';
+      ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = '#102033'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(x, y, r * 0.35, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = '#102033'; ctx.font = 'bold 13px Arial'; ctx.textAlign = 'center'; ctx.fillText('Pulley', x, y - r - 12);
+      ctx.restore();
+    }
+
+    function drawBlock(x, y, w, h, color, label, mass) {
+      ctx.save();
+      ctx.fillStyle = color;
+      ctx.strokeStyle = '#102033';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.roundRect(x - w / 2, y - h / 2, w, h, 10); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
+      ctx.fillText(label, x, y - 4);
+      ctx.font = 'bold 13px Arial'; ctx.fillText(`${mass.toFixed(1)} kg`, x, y + 18);
+      ctx.restore();
+    }
+
+    function drawAtwood(p) {
+      const pulleyX = 465, pulleyY = 150, r = 48;
+      const amp = Math.min(90, offset * p.direction);
+      const leftX = pulleyX - r;
+      const rightX = pulleyX + r;
+      const m1Y = 340 - amp;
+      const m2Y = 340 + amp;
+
+      drawPulley(pulleyX, pulleyY, r);
+      ctx.save();
+      ctx.strokeStyle = '#1769ff'; ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(leftX, pulleyY); ctx.lineTo(leftX, m1Y - 35);
+      ctx.moveTo(rightX, pulleyY); ctx.lineTo(rightX, m2Y - 35);
+      ctx.arc(pulleyX, pulleyY, r, Math.PI, 0);
+      ctx.stroke(); ctx.restore();
+
+      drawBlock(leftX, m1Y, 82, 70, '#1769ff', 'm₁', p.m1);
+      drawBlock(rightX, m2Y, 82, 70, '#f57c00', 'm₂', p.m2);
+
+      if (showMotionEl.checked) {
+        ctx.save(); ctx.strokeStyle = 'rgba(123,31,162,0.45)'; ctx.setLineDash([8, 7]); ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(leftX - 65, 250); ctx.lineTo(leftX - 65, 430); ctx.moveTo(rightX + 65, 250); ctx.lineTo(rightX + 65, 430); ctx.stroke(); ctx.restore();
+      }
+
+      if (showForcesEl.checked) {
+        drawArrow(leftX - 65, m1Y, leftX - 65, m1Y - 75, '#0f9d58', 'T');
+        drawArrow(leftX - 65, m1Y, leftX - 65, m1Y + 75, '#d93025', 'm₁g');
+        drawArrow(rightX + 65, m2Y, rightX + 65, m2Y - 75, '#0f9d58', 'T');
+        drawArrow(rightX + 65, m2Y, rightX + 65, m2Y + 75, '#d93025', 'm₂g');
+        if (p.a > 0.001) drawArrow(pulleyX, 525, pulleyX + 85 * p.direction, 525, '#7b1fa2', 'acceleration direction');
+      }
+    }
+
+    function drawTableSystem(p) {
+      const tableX = 110, tableY = 345, tableW = 520, tableH = 35;
+      const pulleyX = 675, pulleyY = 312, r = 42;
+      const move = Math.min(110, offset);
+      const blockX = 245 + move;
+      const blockY = tableY - 43;
+      const hangingY = 405 + move;
+
+      ctx.save();
+      ctx.fillStyle = '#dbeafe'; ctx.strokeStyle = '#1769ff'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.roundRect(tableX, tableY, tableW, tableH, 8); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#102033'; ctx.font = 'bold 14px Arial'; ctx.fillText('Table', tableX + 16, tableY + 24);
+      ctx.restore();
+      drawPulley(pulleyX, pulleyY, r);
+
+      ctx.save();
+      ctx.strokeStyle = '#1769ff'; ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(blockX + 45, blockY); ctx.lineTo(pulleyX, blockY);
+      ctx.arc(pulleyX, pulleyY, r, -Math.PI / 2, 0);
+      ctx.moveTo(pulleyX + r, pulleyY); ctx.lineTo(pulleyX + r, hangingY - 35);
+      ctx.stroke(); ctx.restore();
+
+      drawBlock(blockX, blockY, 90, 66, '#1769ff', 'm₁', p.m1);
+      drawBlock(pulleyX + r, hangingY, 82, 70, '#f57c00', 'm₂', p.m2);
+
+      if (showForcesEl.checked) {
+        drawArrow(blockX, blockY - 55, blockX, blockY - 115, '#0f9d58', 'N');
+        drawArrow(blockX, blockY + 55, blockX, blockY + 115, '#d93025', 'm₁g');
+        drawArrow(blockX + 60, blockY, blockX + 135, blockY, '#0f9d58', 'T');
+        if (p.friction > 0) drawArrow(blockX - 55, blockY + 15, blockX - 125, blockY + 15, '#f57c00', 'f');
+        drawArrow(pulleyX + r + 65, hangingY, pulleyX + r + 65, hangingY - 75, '#0f9d58', 'T');
+        drawArrow(pulleyX + r + 65, hangingY, pulleyX + r + 65, hangingY + 75, '#d93025', 'm₂g');
+        if (p.a > 0.001) drawArrow(260, 525, 360, 525, '#7b1fa2', 'a');
+      }
+    }
+
+    function drawInclineSystem(p) {
+      const baseX = 170, baseY = 450;
+      const rampLen = 430;
+      const theta = degToRad(p.theta);
+      const topX = baseX + rampLen * Math.cos(theta);
+      const topY = baseY - rampLen * Math.sin(theta);
+      const pulleyX = topX + 42, pulleyY = topY - 16, r = 38;
+      const move = Math.min(110, offset * p.direction);
+      const blockAlong = 185 + move;
+      const blockX = baseX + blockAlong * Math.cos(theta);
+      const blockY = baseY - blockAlong * Math.sin(theta) - 22;
+      const hangingY = pulleyY + 135 + Math.max(0, offset * p.direction);
+
+      ctx.save();
+      ctx.fillStyle = '#f7faff'; ctx.strokeStyle = '#1769ff'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(baseX, baseY); ctx.lineTo(topX, topY); ctx.lineTo(baseX, baseY); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(baseX, baseY); ctx.lineTo(topX, topY); ctx.lineTo(topX, baseY); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#102033'; ctx.font = 'bold 14px Arial'; ctx.fillText(`Incline θ = ${p.theta}°`, baseX + 40, baseY - 12);
+      ctx.restore();
+
+      drawPulley(pulleyX, pulleyY, r);
+      ctx.save();
+      ctx.strokeStyle = '#1769ff'; ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(blockX + 28 * Math.cos(theta), blockY - 28 * Math.sin(theta));
+      ctx.lineTo(pulleyX - r * 0.6, pulleyY + r * 0.5);
+      ctx.arc(pulleyX, pulleyY, r, Math.PI * 0.75, 0);
+      ctx.moveTo(pulleyX + r, pulleyY); ctx.lineTo(pulleyX + r, hangingY - 35);
+      ctx.stroke(); ctx.restore();
+
+      ctx.save();
+      ctx.translate(blockX, blockY);
+      ctx.rotate(-theta);
+      drawBlock(0, 0, 90, 62, '#1769ff', 'm₁', p.m1);
+      ctx.restore();
+      drawBlock(pulleyX + r, hangingY, 82, 70, '#f57c00', 'm₂', p.m2);
+
+      if (showForcesEl.checked) {
+        drawArrow(blockX, blockY, blockX + 90 * Math.cos(theta), blockY - 90 * Math.sin(theta), '#0f9d58', 'T');
+        drawArrow(blockX, blockY, blockX - 70 * Math.sin(theta), blockY - 70 * Math.cos(theta), '#0f9d58', 'N');
+        drawArrow(blockX, blockY, blockX, blockY + 85, '#d93025', 'm₁g');
+        drawArrow(blockX, blockY + 30, blockX - 80 * Math.cos(theta), blockY + 30 + 80 * Math.sin(theta), '#d93025', 'm₁g sinθ');
+        if (p.friction > 0) drawArrow(blockX, blockY - 45, blockX - 70 * p.direction * Math.cos(theta), blockY + 70 * p.direction * Math.sin(theta) - 45, '#f57c00', 'f');
+        drawArrow(pulleyX + r + 60, hangingY, pulleyX + r + 60, hangingY - 75, '#0f9d58', 'T');
+        drawArrow(pulleyX + r + 60, hangingY, pulleyX + r + 60, hangingY + 75, '#d93025', 'm₂g');
+      }
+    }
+
+    function drawFBDPanel(p) {
+      if (!showFBDEl.checked) return;
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.96)'; ctx.strokeStyle = '#dbe6f6'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(625, 460, 285, 170, 14); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#102033'; ctx.font = 'bold 16px Arial'; ctx.fillText('Mini FBD Guide', 645, 490);
+      ctx.font = '14px Arial';
+      if (p.mode === 'atwood') {
+        ctx.fillText('m₁: T upward, m₁g downward', 645, 520);
+        ctx.fillText('m₂: T upward, m₂g downward', 645, 548);
+        ctx.fillText('Use common acceleration a.', 645, 576);
+      } else if (p.mode === 'incline') {
+        ctx.fillText('m₁: resolve weight on incline.', 645, 520);
+        ctx.fillText('Along plane: m₁g sinθ', 645, 548);
+        ctx.fillText('Normal: m₁g cosθ', 645, 576);
+        ctx.fillText('Friction opposes tendency.', 645, 604);
+      } else {
+        ctx.fillText('m₁: T pulls horizontally.', 645, 520);
+        ctx.fillText('m₂: weight pulls downward.', 645, 548);
+        ctx.fillText('Friction opposes m₁ motion.', 645, 576);
+      }
+      ctx.restore();
+    }
+
+    function drawConceptBox() {
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.96)';
+      ctx.strokeStyle = '#dbe6f6'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(48, 640, 850, 58, 14); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#102033'; ctx.font = 'bold 15px Arial';
+      ctx.fillText('NEET Rule: Draw FBD separately → choose acceleration direction → apply F = ma for each block → solve for a and T.', 70, 675);
+      ctx.restore();
+    }
+
+    function drawScene() {
+      const p = getParams();
+      updateUI(p);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.save();
+      ctx.strokeStyle = '#eef3fb'; ctx.lineWidth = 1;
+      for (let x = 0; x <= canvas.width; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
+      for (let y = 0; y <= canvas.height; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
+      ctx.restore();
+
+      ctx.save();
+      ctx.fillStyle = '#102033'; ctx.font = 'bold 22px Arial'; ctx.fillText('Pulley & Block Visualizer', 28, 38);
+      ctx.font = '15px Arial'; ctx.fillStyle = '#637083'; ctx.fillText('Clear layout: string, pulley, blocks, tension, weight, friction, and acceleration.', 28, 62);
+      ctx.restore();
+
+      if (p.mode === 'atwood') drawAtwood(p);
+      if (p.mode === 'table' || p.mode === 'roughTable') drawTableSystem(p);
+      if (p.mode === 'incline') drawInclineSystem(p);
+      drawFBDPanel(p);
+      drawConceptBox();
+      drawWatermark();
+    }
+
+    function animate(timestamp) {
+      if (lastFrame === null) lastFrame = timestamp;
+      const dt = Math.min(0.04, (timestamp - lastFrame) / 1000);
+      lastFrame = timestamp;
+      const p = getParams();
+      if (isPlaying && p.a > 0.001) {
+        offset += dt * p.speed * Math.max(20, p.a * 18);
+        if (offset > 120) offset = 0;
+      }
+      drawScene();
+      requestAnimationFrame(animate);
+    }
+
+    function resetSimulation(redraw = true) {
+      isPlaying = false;
+      offset = 0;
+      lastFrame = null;
+      if (redraw) drawScene();
+    }
+
+    [modeEl, m1El, m2El, muEl, thetaEl, gravityEl, animSpeedEl, showForcesEl, showFBDEl, showMotionEl, showFormulaEl].forEach(el => {
+      el.addEventListener('input', () => resetSimulation());
+      el.addEventListener('change', () => resetSimulation());
+    });
+
+    playBtn.addEventListener('click', () => { isPlaying = true; lastFrame = null; });
+    pauseBtn.addEventListener('click', () => { isPlaying = false; });
+    resetBtn.addEventListener('click', () => resetSimulation());
+    balanceBtn.addEventListener('click', () => {
+      if (modeEl.value === 'atwood') { m1El.value = 6; m2El.value = 6; }
+      if (modeEl.value === 'table' || modeEl.value === 'roughTable') { m1El.value = 10; m2El.value = 2; muEl.value = 0.2; }
+      if (modeEl.value === 'incline') { m1El.value = 10; m2El.value = 5; thetaEl.value = 30; muEl.value = 0.1; }
+      resetSimulation();
+    });
+    formulaBtn.addEventListener('click', () => {
+      showFormulaEl.checked = !showFormulaEl.checked;
+      formulaBox.classList.toggle('hidden', !showFormulaEl.checked);
+      drawScene();
+    });
+
+    drawScene();
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>

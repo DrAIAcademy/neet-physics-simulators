@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEET Physics Simulation: Relative Velocity</title>
+  <style>
+    :root {
+      --panel: #ffffff;
+      --ink: #102033;
+      --muted: #637083;
+      --blue: #1769ff;
+      --green: #0f9d58;
+      --orange: #f57c00;
+      --red: #d93025;
+      --purple: #7b1fa2;
+      --cyan: #00a9e8;
+      --line: #dbe6f6;
+      --soft: #f7faff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #eef5ff, #ffffff);
+      color: var(--ink);
+    }
+
+    header {
+      padding: 24px 18px;
+      text-align: center;
+      background: linear-gradient(135deg, #061d49, #0d6efd);
+      color: white;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: clamp(26px, 4vw, 44px);
+      letter-spacing: 0.3px;
+    }
+
+    header p { margin: 0; opacity: 0.94; font-size: 16px; }
+
+    .wrap {
+      max-width: 1240px;
+      margin: 22px auto;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 390px;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 12px 30px rgba(16, 32, 51, 0.08);
+      overflow: hidden;
+    }
+
+    .canvas-card { padding: 14px; }
+
+    canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 14px;
+      background: white;
+      border: 1px solid #e6eefb;
+    }
+
+    .controls { padding: 18px; }
+    h2 { margin: 0 0 14px; font-size: 20px; }
+
+    .mode-box {
+      margin-bottom: 16px;
+      padding: 12px;
+      background: #f7faff;
+      border: 1px solid #e5eefb;
+      border-radius: 14px;
+    }
+
+    .control {
+      margin-bottom: 14px;
+      padding-bottom: 11px;
+      border-bottom: 1px dashed #d8e3f2;
+    }
+
+    .control:last-of-type { border-bottom: 0; margin-bottom: 12px; padding-bottom: 0; }
+
+    label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    label span { color: var(--blue); white-space: nowrap; }
+
+    input[type="range"], select { width: 100%; accent-color: var(--blue); }
+
+    select {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid #cbd9ec;
+      background: white;
+      color: var(--ink);
+      font-weight: 800;
+      font-size: 15px;
+    }
+
+    .toggle-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 8px;
+      background: #f7faff;
+      border: 1px solid #e5eefb;
+      border-radius: 12px;
+      padding: 9px 10px;
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: 0;
+      padding: 11px 10px;
+      border-radius: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      color: white;
+      background: var(--blue);
+      box-shadow: 0 8px 16px rgba(23, 105, 255, 0.2);
+    }
+
+    button:nth-child(2) { background: var(--orange); }
+    button:nth-child(3) { background: var(--red); }
+    button:nth-child(4) { background: var(--green); }
+    button:nth-child(5) { background: var(--purple); grid-column: 1 / -1; }
+
+    .hint {
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 12px;
+      background: #eef6ff;
+      border: 1px solid #d8eaff;
+      color: #0b45a0;
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: #f4f7fb;
+      border: 1px solid #dde8f6;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .content-grid {
+      max-width: 1240px;
+      margin: 0 auto 34px;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .data, .formula, .questions, .traps, .explain { padding: 18px; }
+
+    .status {
+      padding: 14px 16px;
+      border-radius: 14px;
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 16px;
+      text-align: center;
+      background: #eef6ff;
+      color: #0b45a0;
+      border: 1px solid #d8eaff;
+    }
+
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .stat {
+      background: var(--soft);
+      border: 1px solid #e5eefb;
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .stat b { display: block; color: var(--muted); font-size: 13px; margin-bottom: 5px; }
+    .stat span { font-size: 17px; font-weight: 900; }
+
+    .formula p, .questions li, .traps li, .explain li { line-height: 1.58; }
+
+    .formula-box {
+      background: #f8fbff;
+      border: 1px solid #deebff;
+      border-radius: 14px;
+      padding: 14px;
+      margin: 12px 0;
+      display: block;
+    }
+
+    .formula-box.hidden { display: none; }
+
+    .formula-box code {
+      display: block;
+      font-size: 17px;
+      padding: 4px 0;
+      color: #0b45a0;
+      white-space: normal;
+      font-weight: 800;
+    }
+
+    ol, ul { margin: 0; padding-left: 22px; }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      padding: 0 16px 26px;
+      font-size: 14px;
+    }
+
+    footer a {
+      color: #0b45a0;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 940px) {
+      .wrap, .content-grid { grid-template-columns: 1fr; }
+      .buttons { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Relative Velocity Simulator</h1>
+    <p>NEET Physics Interactive Lab: river-boat, rain-man, relative motion, vector subtraction, and shortest path</p>
+  </header>
+
+  <main class="wrap">
+    <section class="card canvas-card">
+      <canvas id="simCanvas" width="960" height="720"></canvas>
+      <div class="legend">
+        <span class="pill">Blue: ground/river frame</span>
+        <span class="pill">Green: object velocity</span>
+        <span class="pill">Orange: medium velocity</span>
+        <span class="pill">Red: relative/resultant velocity</span>
+        <span class="pill">Watermark: Dr AI Academy</span>
+      </div>
+    </section>
+
+    <aside class="card controls">
+      <h2>Controls</h2>
+
+      <div class="mode-box">
+        <label>Situation</label>
+        <select id="mode">
+          <option value="river" selected>River-boat crossing</option>
+          <option value="rain">Rain-man umbrella</option>
+          <option value="twoCars">Two cars relative motion</option>
+          <option value="chase">Chase / catch-up motion</option>
+        </select>
+      </div>
+
+      <div class="control"><label>Object speed <span id="objectSpeedVal">6 m/s</span></label><input id="objectSpeed" type="range" min="1" max="20" step="0.5" value="6" /></div>
+      <div class="control"><label>Object angle <span id="objectAngleVal">90°</span></label><input id="objectAngle" type="range" min="0" max="180" step="1" value="90" /></div>
+      <div class="control"><label>Medium / other speed <span id="mediumSpeedVal">3 m/s</span></label><input id="mediumSpeed" type="range" min="0" max="15" step="0.5" value="3" /></div>
+      <div class="control"><label>River width / distance <span id="distanceVal">80 m</span></label><input id="distance" type="range" min="20" max="200" step="5" value="80" /></div>
+      <div class="control"><label>Animation speed <span id="animVal">1.0×</span></label><input id="animSpeed" type="range" min="0.3" max="3" step="0.1" value="1" /></div>
+      <div class="control"><label>Vector scale <span id="scaleVal">1.0×</span></label><input id="vectorScale" type="range" min="0.6" max="2" step="0.1" value="1" /></div>
+
+      <div class="toggle-row">
+        <label class="toggle"><input id="showVectors" type="checkbox" checked /> Vectors</label>
+        <label class="toggle"><input id="showPath" type="checkbox" checked /> Path</label>
+        <label class="toggle"><input id="showFormula" type="checkbox" checked /> Formulas</label>
+        <label class="toggle"><input id="showTip" type="checkbox" checked /> NEET tip</label>
+      </div>
+
+      <div class="buttons">
+        <button id="playBtn">Play</button>
+        <button id="pauseBtn">Pause</button>
+        <button id="resetBtn">Reset</button>
+        <button id="sampleBtn">Sample NEET Case</button>
+        <button id="formulaBtn">Show/Hide Formulas</button>
+      </div>
+
+      <div class="hint">Tip: Relative velocity of A with respect to B is vAB = vA − vB. Always subtract vectors, not only magnitudes.</div>
+    </aside>
+  </main>
+
+  <section class="content-grid">
+    <section class="card data">
+      <h2>Live Values</h2>
+      <div id="status" class="status">Relative velocity means velocity seen from another moving object or frame.</div>
+      <div class="stats">
+        <div class="stat"><b>Object velocity components</b><span id="objCompOut">--</span></div>
+        <div class="stat"><b>Medium/other velocity</b><span id="medCompOut">--</span></div>
+        <div class="stat"><b>Resultant ground velocity</b><span id="resultOut">--</span></div>
+        <div class="stat"><b>Relative velocity</b><span id="relativeOut">--</span></div>
+        <div class="stat"><b>Crossing / catch time</b><span id="timeOut">--</span></div>
+        <div class="stat"><b>Drift / separation</b><span id="driftOut">--</span></div>
+        <div class="stat"><b>Direction angle</b><span id="angleOut">--</span></div>
+        <div class="stat"><b>NEET observation</b><span id="obsOut">--</span></div>
+      </div>
+    </section>
+
+    <section class="card formula">
+      <h2>Formula Explanation</h2>
+      <p>Relative velocity problems become easy when every velocity is broken into components.</p>
+      <div id="formulaBox" class="formula-box">
+        <code>Relative velocity: vAB = vA − vB</code>
+        <code>River-boat ground velocity: vBG = vBR + vRG</code>
+        <code>Time to cross river: t = width / perpendicular component of boat velocity</code>
+        <code>Drift = river speed × crossing time</code>
+        <code>Rain umbrella angle: tanθ = horizontal velocity / vertical rain velocity</code>
+        <code>Same direction relative speed: |v1 − v2|</code>
+        <code>Opposite direction relative speed: v1 + v2</code>
+      </div>
+      <p><b>NEET key:</b> Do not add or subtract speeds blindly. Use vector direction carefully.</p>
+    </section>
+
+    <section class="card explain">
+      <h2>Simple NEET Explanation</h2>
+      <ul>
+        <li>Relative velocity means how fast one object appears to move from another object's point of view.</li>
+        <li>Velocity is a vector, so direction matters.</li>
+        <li>In river-boat problems, boat velocity relative to water and river velocity combine to give ground velocity.</li>
+        <li>For shortest time across river, boat should point perpendicular to river bank.</li>
+        <li>For zero drift, boat should be aimed upstream at a suitable angle.</li>
+        <li>In rain problems, umbrella is tilted opposite to apparent rain direction.</li>
+        <li>For two objects moving in same direction, relative speed is difference of speeds.</li>
+        <li>For opposite direction, relative speed is sum of speeds.</li>
+      </ul>
+    </section>
+
+    <section class="card traps">
+      <h2>NEET Traps</h2>
+      <ul>
+        <li>Relative velocity is vector subtraction, not simple arithmetic in all cases.</li>
+        <li>Shortest time and shortest path in river crossing are different conditions.</li>
+        <li>River current affects drift but not perpendicular crossing component.</li>
+        <li>If boat speed is less than river speed, zero drift may not be possible.</li>
+        <li>Apparent rain direction depends on relative velocity of rain with respect to man.</li>
+        <li>Opposite direction relative speed is sum, same direction is difference.</li>
+        <li>Angle should be calculated using correct components.</li>
+        <li>Velocity has direction; speed does not.</li>
+      </ul>
+    </section>
+
+    <section class="card questions" style="grid-column: 1 / -1; padding: 18px;">
+      <h2>NEET-Style Observation Questions</h2>
+      <ol>
+        <li>What is the formula for relative velocity of A with respect to B?</li>
+        <li>In river crossing, what gives minimum time?</li>
+        <li>Why does a boat drift downstream while crossing a river?</li>
+        <li>When is zero drift possible in river-boat motion?</li>
+        <li>Why is umbrella tilted while walking in rain?</li>
+        <li>What is relative speed for two cars moving in opposite directions?</li>
+        <li>Why should velocity be resolved into components?</li>
+      </ol>
+    </section>
+  </section>
+
+  <footer><a href="https://courses.draiacademy.com" target="_blank" rel="noopener">Dr AI Academy</a> | AI Powered Physics for NEET</footer>
+
+  <script>
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const modeEl = document.getElementById('mode');
+    const objectSpeedEl = document.getElementById('objectSpeed');
+    const objectAngleEl = document.getElementById('objectAngle');
+    const mediumSpeedEl = document.getElementById('mediumSpeed');
+    const distanceEl = document.getElementById('distance');
+    const animSpeedEl = document.getElementById('animSpeed');
+    const vectorScaleEl = document.getElementById('vectorScale');
+    const showVectorsEl = document.getElementById('showVectors');
+    const showPathEl = document.getElementById('showPath');
+    const showFormulaEl = document.getElementById('showFormula');
+    const showTipEl = document.getElementById('showTip');
+
+    const objectSpeedVal = document.getElementById('objectSpeedVal');
+    const objectAngleVal = document.getElementById('objectAngleVal');
+    const mediumSpeedVal = document.getElementById('mediumSpeedVal');
+    const distanceVal = document.getElementById('distanceVal');
+    const animVal = document.getElementById('animVal');
+    const scaleVal = document.getElementById('scaleVal');
+
+    const objCompOut = document.getElementById('objCompOut');
+    const medCompOut = document.getElementById('medCompOut');
+    const resultOut = document.getElementById('resultOut');
+    const relativeOut = document.getElementById('relativeOut');
+    const timeOut = document.getElementById('timeOut');
+    const driftOut = document.getElementById('driftOut');
+    const angleOut = document.getElementById('angleOut');
+    const obsOut = document.getElementById('obsOut');
+    const statusEl = document.getElementById('status');
+    const formulaBox = document.getElementById('formulaBox');
+
+    const playBtn = document.getElementById('playBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const sampleBtn = document.getElementById('sampleBtn');
+    const formulaBtn = document.getElementById('formulaBtn');
+
+    let isPlaying = false;
+    let tLive = 0;
+    let lastFrame = null;
+
+    function fmt(num, unit = '') {
+      if (!Number.isFinite(num)) return '--';
+      return `${num.toFixed(2)} ${unit}`.trim();
+    }
+
+    function degToRad(deg) { return deg * Math.PI / 180; }
+    function mag(x, y) { return Math.hypot(x, y); }
+    function angleDeg(x, y) { return Math.atan2(y, x) * 180 / Math.PI; }
+
+    function applyModeDefaults() {
+      const mode = modeEl.value;
+      if (mode === 'river') { objectSpeedEl.value = 6; objectAngleEl.value = 90; mediumSpeedEl.value = 3; distanceEl.value = 80; }
+      if (mode === 'rain') { objectSpeedEl.value = 4; objectAngleEl.value = 270; mediumSpeedEl.value = 10; distanceEl.value = 80; }
+      if (mode === 'twoCars') { objectSpeedEl.value = 12; objectAngleEl.value = 0; mediumSpeedEl.value = 8; distanceEl.value = 120; }
+      if (mode === 'chase') { objectSpeedEl.value = 14; objectAngleEl.value = 0; mediumSpeedEl.value = 8; distanceEl.value = 80; }
+      resetSimulation(false);
+    }
+
+    function getParams() {
+      const mode = modeEl.value;
+      const vo = Number(objectSpeedEl.value);
+      const theta = Number(objectAngleEl.value);
+      const vm = Number(mediumSpeedEl.value);
+      const D = Number(distanceEl.value);
+      const anim = Number(animSpeedEl.value);
+      const scale = Number(vectorScaleEl.value);
+      let ox = vo * Math.cos(degToRad(theta));
+      let oy = -vo * Math.sin(degToRad(theta));
+      let mx = vm;
+      let my = 0;
+
+      if (mode === 'rain') {
+        ox = vo;
+        oy = 0;
+        mx = 0;
+        my = vm;
+      }
+
+      if (mode === 'twoCars' || mode === 'chase') {
+        ox = vo;
+        oy = 0;
+        mx = vm;
+        my = 0;
+      }
+
+      const rx = ox + mx;
+      const ry = oy + my;
+      const relx = ox - mx;
+      const rely = oy - my;
+      return { mode, vo, theta, vm, D, anim, scale, ox, oy, mx, my, rx, ry, relx, rely };
+    }
+
+    function updateUI(p) {
+      objectSpeedVal.textContent = `${p.vo.toFixed(1)} m/s`;
+      objectAngleVal.textContent = `${p.theta}°`;
+      mediumSpeedVal.textContent = `${p.vm.toFixed(1)} m/s`;
+      distanceVal.textContent = `${p.D} m`;
+      animVal.textContent = `${p.anim.toFixed(1)}×`;
+      scaleVal.textContent = `${p.scale.toFixed(1)}×`;
+      formulaBox.classList.toggle('hidden', !showFormulaEl.checked);
+
+      objCompOut.textContent = `(${p.ox.toFixed(2)}, ${(-p.oy).toFixed(2)}) m/s`;
+      medCompOut.textContent = `(${p.mx.toFixed(2)}, ${(-p.my).toFixed(2)}) m/s`;
+      resultOut.textContent = `${mag(p.rx, p.ry).toFixed(2)} m/s`;
+      relativeOut.textContent = `${mag(p.relx, p.rely).toFixed(2)} m/s`;
+      angleOut.textContent = `${angleDeg(p.rx, p.ry).toFixed(1)}°`;
+
+      if (p.mode === 'river') {
+        const cross = Math.abs(p.oy);
+        const time = cross > 0.001 ? p.D / cross : Infinity;
+        const drift = Number.isFinite(time) ? p.rx * time : Infinity;
+        timeOut.textContent = fmt(time, 's');
+        driftOut.textContent = fmt(drift, 'm');
+        obsOut.textContent = p.theta === 90 ? 'Shortest time case' : 'Angled crossing case';
+        statusEl.textContent = 'River-boat: resultant ground velocity = boat velocity relative to water + river velocity.';
+      } else if (p.mode === 'rain') {
+        const relRainX = p.mx - p.ox;
+        const relRainY = p.my - p.oy;
+        const tilt = Math.abs(Math.atan2(relRainX, relRainY) * 180 / Math.PI);
+        timeOut.textContent = '--';
+        driftOut.textContent = `Umbrella tilt ≈ ${tilt.toFixed(1)}°`;
+        obsOut.textContent = 'Tilt opposite to apparent rain';
+        statusEl.textContent = 'Rain-man: apparent rain velocity = velocity of rain − velocity of man.';
+      } else if (p.mode === 'chase') {
+        const relSpeed = p.vo - p.vm;
+        const time = relSpeed > 0 ? p.D / relSpeed : Infinity;
+        timeOut.textContent = fmt(time, 's');
+        driftOut.textContent = relSpeed > 0 ? 'Will catch' : 'Will not catch';
+        obsOut.textContent = 'Same direction: relative speed = difference';
+        statusEl.textContent = 'Chase motion: catch time = initial separation / relative speed.';
+      } else {
+        timeOut.textContent = '--';
+        driftOut.textContent = `Relative speed = ${Math.abs(p.vo - p.vm).toFixed(2)} m/s`;
+        obsOut.textContent = 'Same direction: speed difference';
+        statusEl.textContent = 'Two cars: relative speed depends on direction of motion.';
+      }
+    }
+
+    function drawWatermark() {
+      ctx.save();
+      ctx.globalAlpha = 0.18;
+      ctx.fillStyle = '#0b2d5c';
+      ctx.textAlign = 'right';
+      ctx.font = 'bold 22px Arial';
+      ctx.fillText('Dr AI Academy', canvas.width - 30, canvas.height - 42);
+      ctx.font = '12px Arial';
+      ctx.fillText('AI Powered Physics for NEET', canvas.width - 30, canvas.height - 23);
+      ctx.restore();
+    }
+
+    function drawArrow(x1, y1, x2, y2, color, label = '') {
+      const headLen = 11;
+      const a = Math.atan2(y2 - y1, x2 - x1);
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - headLen * Math.cos(a - Math.PI / 6), y2 - headLen * Math.sin(a - Math.PI / 6));
+      ctx.lineTo(x2 - headLen * Math.cos(a + Math.PI / 6), y2 - headLen * Math.sin(a + Math.PI / 6));
+      ctx.closePath(); ctx.fill();
+      if (label) { ctx.font = 'bold 13px Arial'; ctx.fillText(label, x2 + 8, y2 - 8); }
+      ctx.restore();
+    }
+
+    function drawVectorPanel(p) {
+      if (!showVectorsEl.checked) return;
+      const ox = 690, oy = 190;
+      const s = 9 * p.scale;
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.96)';
+      ctx.strokeStyle = '#dbe6f6';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(610, 95, 300, 245, 14); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#102033'; ctx.font = 'bold 16px Arial'; ctx.fillText('Vector Diagram', 630, 125);
+      ctx.strokeStyle = '#eef3fb';
+      for (let i = -4; i <= 4; i++) {
+        ctx.beginPath(); ctx.moveTo(ox + i * 30, 145); ctx.lineTo(ox + i * 30, 315); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(630, oy + i * 25); ctx.lineTo(890, oy + i * 25); ctx.stroke();
+      }
+      drawArrow(ox, oy, ox + p.ox * s, oy + p.oy * s, '#0f9d58', 'v object');
+      drawArrow(ox, oy, ox + p.mx * s, oy + p.my * s, '#f57c00', 'v medium');
+      drawArrow(ox, oy, ox + p.rx * s, oy + p.ry * s, '#d93025', 'resultant');
+      drawArrow(ox, oy, ox + p.relx * s, oy + p.rely * s, '#7b1fa2', 'relative');
+      ctx.restore();
+    }
+
+    function drawRiver(p) {
+      const left = 90, right = 575, top = 135, bottom = 515;
+      const widthPx = bottom - top;
+      const progress = Math.min(1, tLive / Math.max(1, p.D / Math.max(0.001, Math.abs(p.oy))));
+      const boatStartX = 180;
+      const boatStartY = bottom;
+      const y = boatStartY - progress * widthPx;
+      const driftPx = progress * p.rx * 18;
+      const x = boatStartX + driftPx;
+
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,169,232,0.13)';
+      ctx.fillRect(left, top, right - left, bottom - top);
+      ctx.strokeStyle = '#1769ff';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(left, top, right - left, bottom - top);
+      ctx.fillStyle = '#102033'; ctx.font = 'bold 15px Arial';
+      ctx.fillText('River', left + 15, top + 28);
+      ctx.fillText('Start bank', left + 15, bottom + 25);
+      ctx.fillText('Opposite bank', left + 15, top - 12);
+      ctx.restore();
+
+      if (showPathEl.checked) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(245,124,0,0.8)';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([7, 6]);
+        ctx.beginPath(); ctx.moveTo(boatStartX, boatStartY); ctx.lineTo(x, y); ctx.stroke();
+        ctx.setLineDash([]); ctx.restore();
+      }
+
+      drawArrow(360, 100, 470, 100, '#f57c00', 'river current');
+      ctx.save();
+      ctx.fillStyle = '#1769ff';
+      ctx.beginPath(); ctx.roundRect(x - 24, y - 14, 48, 28, 9); ctx.fill();
+      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 13px Arial'; ctx.textAlign = 'center'; ctx.fillText('BOAT', x, y + 5);
+      ctx.restore();
+      if (showVectorsEl.checked) {
+        drawArrow(x, y, x + p.ox * 9, y + p.oy * 9, '#0f9d58', 'boat v');
+        drawArrow(x, y, x + p.rx * 9, y + p.ry * 9, '#d93025', 'ground v');
+      }
+    }
+
+    function drawRain(p) {
+      const manX = 300 + tLive * p.ox * 8;
+      const manY = 420;
+      ctx.save();
+      ctx.fillStyle = '#f7faff'; ctx.fillRect(70, 110, 500, 390);
+      ctx.strokeStyle = '#dbe6f6'; ctx.strokeRect(70, 110, 500, 390);
+      // rain streaks relative to ground
+      ctx.strokeStyle = 'rgba(23,105,255,0.45)'; ctx.lineWidth = 2;
+      for (let i = 0; i < 32; i++) {
+        const x = 90 + (i * 53 + tLive * 20) % 480;
+        const y = 110 + (i * 37 + tLive * p.vm * 20) % 370;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + 24); ctx.stroke();
+      }
+      // man
+      ctx.fillStyle = '#102033';
+      ctx.beginPath(); ctx.arc(manX % 500 + 70, manY - 45, 14, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(manX % 500 + 70, manY - 30); ctx.lineTo(manX % 500 + 70, manY + 25); ctx.strokeStyle = '#102033'; ctx.lineWidth = 5; ctx.stroke();
+      const relRainX = p.mx - p.ox;
+      const relRainY = p.my - p.oy;
+      const tilt = Math.atan2(relRainX, relRainY);
+      const ux = manX % 500 + 70;
+      const uy = manY - 70;
+      ctx.strokeStyle = '#d93025'; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(ux, uy); ctx.lineTo(ux - Math.sin(tilt) * 58, uy - Math.cos(tilt) * 20); ctx.stroke();
+      ctx.fillStyle = '#d93025'; ctx.font = 'bold 13px Arial'; ctx.fillText('umbrella tilted opposite apparent rain', 150, 530);
+      ctx.restore();
+
+      if (showVectorsEl.checked) {
+        drawArrow(665, 480, 665 + relRainX * 12, 480 + relRainY * 12, '#7b1fa2', 'apparent rain');
+        drawArrow(665, 480, 665 + p.ox * 12, 480 + p.oy * 12, '#0f9d58', 'man v');
+      }
+    }
+
+    function drawCars(p) {
+      const roadY = 340;
+      const start1 = 120;
+      const start2 = p.mode === 'chase' ? 120 + p.D * 3 : 650;
+      const t = tLive;
+      const x1 = (start1 + p.vo * t * 9) % 780 + 80;
+      let x2 = p.mode === 'chase' ? start2 + p.vm * t * 9 : start2 + p.vm * t * 9;
+      if (p.mode !== 'chase') x2 = ((x2 - 80) % 780) + 80;
+      ctx.save();
+      ctx.strokeStyle = '#102033'; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(80, roadY); ctx.lineTo(880, roadY); ctx.stroke();
+      ctx.setLineDash([15, 15]); ctx.strokeStyle = '#b8c7da';
+      ctx.beginPath(); ctx.moveTo(80, roadY + 42); ctx.lineTo(880, roadY + 42); ctx.stroke();
+      ctx.setLineDash([]);
+      drawCar(x1, roadY - 25, '#1769ff', 'A');
+      drawCar(x2, roadY + 25, '#f57c00', 'B');
+      if (showPathEl.checked && p.mode === 'chase') {
+        ctx.strokeStyle = '#d93025'; ctx.setLineDash([7, 6]); ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(start1 + 80, roadY - 70); ctx.lineTo(start2 + 80, roadY - 70); ctx.stroke();
+        ctx.fillStyle = '#d93025'; ctx.font = 'bold 13px Arial'; ctx.fillText('initial separation', (start1 + start2) / 2 + 60, roadY - 82);
+      }
+      ctx.restore();
+      if (showVectorsEl.checked) {
+        drawArrow(x1, roadY - 70, x1 + p.vo * 7, roadY - 70, '#0f9d58', 'vA');
+        drawArrow(x2, roadY + 75, x2 + p.vm * 7, roadY + 75, '#f57c00', 'vB');
+      }
+    }
+
+    function drawCar(x, y, color, label) {
+      ctx.save();
+      ctx.fillStyle = color;
+      ctx.beginPath(); ctx.roundRect(x - 28, y - 15, 56, 30, 8); ctx.fill();
+      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center'; ctx.fillText(label, x, y + 5);
+      ctx.fillStyle = '#102033';
+      ctx.beginPath(); ctx.arc(x - 18, y + 18, 6, 0, Math.PI * 2); ctx.arc(x + 18, y + 18, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+
+    function drawTipBox() {
+      if (!showTipEl.checked) return;
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.96)';
+      ctx.strokeStyle = '#dbe6f6'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(48, 585, 850, 80, 14); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#102033'; ctx.font = 'bold 16px Arial'; ctx.fillText('NEET Rule', 70, 615);
+      ctx.font = '15px Arial'; ctx.fillText('Relative velocity = vector difference. First choose frame, then subtract velocity of observer from velocity of object.', 70, 643);
+      ctx.restore();
+    }
+
+    function drawScene() {
+      const p = getParams();
+      updateUI(p);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.strokeStyle = '#eef3fb'; ctx.lineWidth = 1;
+      for (let x = 0; x <= canvas.width; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
+      for (let y = 0; y <= canvas.height; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
+      ctx.restore();
+      ctx.save();
+      ctx.fillStyle = '#102033'; ctx.font = 'bold 22px Arial'; ctx.fillText('Relative Velocity Visualizer', 28, 38);
+      ctx.font = '15px Arial'; ctx.fillStyle = '#637083'; ctx.fillText('Understand relative motion using vectors and animated situations.', 28, 62);
+      ctx.restore();
+
+      if (p.mode === 'river') drawRiver(p);
+      if (p.mode === 'rain') drawRain(p);
+      if (p.mode === 'twoCars' || p.mode === 'chase') drawCars(p);
+      drawVectorPanel(p);
+      drawTipBox();
+      drawWatermark();
+    }
+
+    function animate(timestamp) {
+      if (lastFrame === null) lastFrame = timestamp;
+      const dt = Math.min(0.04, (timestamp - lastFrame) / 1000);
+      lastFrame = timestamp;
+      const p = getParams();
+      if (isPlaying) {
+        tLive += dt * p.anim;
+        if (tLive > 25) tLive = 0;
+      }
+      drawScene();
+      requestAnimationFrame(animate);
+    }
+
+    function resetSimulation(redraw = true) {
+      isPlaying = false;
+      tLive = 0;
+      lastFrame = null;
+      if (redraw) drawScene();
+    }
+
+    [objectSpeedEl, objectAngleEl, mediumSpeedEl, distanceEl, animSpeedEl, vectorScaleEl, showVectorsEl, showPathEl, showFormulaEl, showTipEl].forEach(el => {
+      el.addEventListener('input', () => resetSimulation());
+      el.addEventListener('change', () => resetSimulation());
+    });
+    modeEl.addEventListener('change', applyModeDefaults);
+    playBtn.addEventListener('click', () => { isPlaying = true; lastFrame = null; });
+    pauseBtn.addEventListener('click', () => { isPlaying = false; });
+    resetBtn.addEventListener('click', () => resetSimulation());
+    sampleBtn.addEventListener('click', () => {
+      modeEl.value = 'river'; objectSpeedEl.value = 10; objectAngleEl.value = 127; mediumSpeedEl.value = 6; distanceEl.value = 100; resetSimulation();
+    });
+    formulaBtn.addEventListener('click', () => {
+      showFormulaEl.checked = !showFormulaEl.checked;
+      formulaBox.classList.toggle('hidden', !showFormulaEl.checked);
+      drawScene();
+    });
+
+    applyModeDefaults();
+    drawScene();
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>

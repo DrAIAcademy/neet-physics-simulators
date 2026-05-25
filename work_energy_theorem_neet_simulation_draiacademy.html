@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEET Physics Simulation: Work-Energy Theorem</title>
+  <style>
+    :root {
+      --panel: #ffffff;
+      --ink: #102033;
+      --muted: #637083;
+      --blue: #1769ff;
+      --green: #0f9d58;
+      --orange: #f57c00;
+      --red: #d93025;
+      --purple: #7b1fa2;
+      --cyan: #00a9e8;
+      --line: #dbe6f6;
+      --soft: #f7faff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #eef5ff, #ffffff);
+      color: var(--ink);
+    }
+
+    header {
+      padding: 24px 18px;
+      text-align: center;
+      background: linear-gradient(135deg, #061d49, #0d6efd);
+      color: white;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: clamp(26px, 4vw, 44px);
+      letter-spacing: 0.3px;
+    }
+
+    header p { margin: 0; opacity: 0.94; font-size: 16px; }
+
+    .wrap {
+      max-width: 1240px;
+      margin: 22px auto;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 390px;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 12px 30px rgba(16, 32, 51, 0.08);
+      overflow: hidden;
+    }
+
+    .canvas-card { padding: 14px; }
+
+    canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 14px;
+      background: white;
+      border: 1px solid #e6eefb;
+    }
+
+    .controls { padding: 18px; }
+    h2 { margin: 0 0 14px; font-size: 20px; }
+
+    .mode-box {
+      margin-bottom: 16px;
+      padding: 12px;
+      background: #f7faff;
+      border: 1px solid #e5eefb;
+      border-radius: 14px;
+    }
+
+    .control {
+      margin-bottom: 14px;
+      padding-bottom: 11px;
+      border-bottom: 1px dashed #d8e3f2;
+    }
+
+    .control:last-of-type { border-bottom: 0; margin-bottom: 12px; padding-bottom: 0; }
+
+    label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    label span { color: var(--blue); white-space: nowrap; }
+
+    input[type="range"], select { width: 100%; accent-color: var(--blue); }
+
+    select {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid #cbd9ec;
+      background: white;
+      color: var(--ink);
+      font-weight: 800;
+      font-size: 15px;
+    }
+
+    .toggle-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 8px;
+      background: #f7faff;
+      border: 1px solid #e5eefb;
+      border-radius: 12px;
+      padding: 9px 10px;
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: 0;
+      padding: 11px 10px;
+      border-radius: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      color: white;
+      background: var(--blue);
+      box-shadow: 0 8px 16px rgba(23, 105, 255, 0.2);
+    }
+
+    button:nth-child(2) { background: var(--orange); }
+    button:nth-child(3) { background: var(--red); }
+    button:nth-child(4) { background: var(--green); }
+    button:nth-child(5) { background: var(--purple); grid-column: 1 / -1; }
+
+    .hint {
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 12px;
+      background: #eef6ff;
+      border: 1px solid #d8eaff;
+      color: #0b45a0;
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: #f4f7fb;
+      border: 1px solid #dde8f6;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .content-grid {
+      max-width: 1240px;
+      margin: 0 auto 34px;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .data, .formula, .questions, .traps, .explain { padding: 18px; }
+
+    .status {
+      padding: 14px 16px;
+      border-radius: 14px;
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 16px;
+      text-align: center;
+      background: #eef6ff;
+      color: #0b45a0;
+      border: 1px solid #d8eaff;
+    }
+
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .stat {
+      background: var(--soft);
+      border: 1px solid #e5eefb;
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .stat b { display: block; color: var(--muted); font-size: 13px; margin-bottom: 5px; }
+    .stat span { font-size: 17px; font-weight: 900; }
+
+    .formula p, .questions li, .traps li, .explain li { line-height: 1.58; }
+
+    .formula-box {
+      background: #f8fbff;
+      border: 1px solid #deebff;
+      border-radius: 14px;
+      padding: 14px;
+      margin: 12px 0;
+      display: block;
+    }
+
+    .formula-box.hidden { display: none; }
+
+    .formula-box code {
+      display: block;
+      font-size: 17px;
+      padding: 4px 0;
+      color: #0b45a0;
+      white-space: normal;
+      font-weight: 800;
+    }
+
+    ol, ul { margin: 0; padding-left: 22px; }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      padding: 0 16px 26px;
+      font-size: 14px;
+    }
+
+    footer a {
+      color: #0b45a0;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 940px) {
+      .wrap, .content-grid { grid-template-columns: 1fr; }
+      .buttons { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Work-Energy Theorem Simulator</h1>
+    <p>NEET Physics Interactive Lab: work done, kinetic energy, potential energy, friction, spring energy, and energy conservation</p>
+  </header>
+
+  <main class="wrap">
+    <section class="card canvas-card">
+      <canvas id="simCanvas" width="960" height="740"></canvas>
+      <div class="legend">
+        <span class="pill">Green: applied force / motion</span>
+        <span class="pill">Orange: friction</span>
+        <span class="pill">Blue: kinetic energy</span>
+        <span class="pill">Purple: potential/spring energy</span>
+        <span class="pill">Red: energy loss</span>
+        <span class="pill">Watermark: Dr AI Academy</span>
+      </div>
+    </section>
+
+    <aside class="card controls">
+      <h2>Controls</h2>
+
+      <div class="mode-box">
+        <label>Situation</label>
+        <select id="mode">
+          <option value="horizontal" selected>Horizontal surface</option>
+          <option value="rough">Rough horizontal surface</option>
+          <option value="incline">Inclined plane</option>
+          <option value="spring">Spring compression</option>
+          <option value="freefall">Free fall energy</option>
+        </select>
+      </div>
+
+      <div class="control"><label>Mass, m <span id="massVal">5.0 kg</span></label><input id="mass" type="range" min="0.5" max="20" step="0.5" value="5" /></div>
+      <div class="control"><label>Applied force, F <span id="forceVal">30 N</span></label><input id="force" type="range" min="0" max="120" step="2" value="30" /></div>
+      <div class="control"><label>Displacement, s <span id="dispVal">8.0 m</span></label><input id="disp" type="range" min="0.5" max="20" step="0.5" value="8" /></div>
+      <div class="control"><label>Initial speed, u <span id="uVal">0.0 m/s</span></label><input id="u" type="range" min="0" max="20" step="0.5" value="0" /></div>
+      <div class="control"><label>Friction coefficient, μ <span id="muVal">0.20</span></label><input id="mu" type="range" min="0" max="1" step="0.05" value="0.2" /></div>
+      <div class="control"><label>Angle / height <span id="angleVal">30°</span></label><input id="angle" type="range" min="5" max="70" step="1" value="30" /></div>
+      <div class="control"><label>Spring constant, k <span id="kVal">80 N/m</span></label><input id="springK" type="range" min="10" max="300" step="5" value="80" /></div>
+      <div class="control"><label>Gravity, g <span id="gVal">9.8 m/s²</span></label><input id="gravity" type="range" min="1" max="15" step="0.1" value="9.8" /></div>
+      <div class="control"><label>Animation speed <span id="speedVal">1.0×</span></label><input id="animSpeed" type="range" min="0.3" max="3" step="0.1" value="1" /></div>
+
+      <div class="toggle-row">
+        <label class="toggle"><input id="showForces" type="checkbox" checked /> Forces</label>
+        <label class="toggle"><input id="showEnergy" type="checkbox" checked /> Energy bars</label>
+        <label class="toggle"><input id="showGraph" type="checkbox" checked /> W-KE graph</label>
+        <label class="toggle"><input id="showFormula" type="checkbox" checked /> Formulas</label>
+      </div>
+
+      <div class="buttons">
+        <button id="playBtn">Play</button>
+        <button id="pauseBtn">Pause</button>
+        <button id="resetBtn">Reset</button>
+        <button id="sampleBtn">Sample NEET Case</button>
+        <button id="formulaBtn">Show/Hide Formulas</button>
+      </div>
+
+      <div class="hint">Tip: Work-energy theorem says net work done on a body equals change in kinetic energy: Wnet = ΔK.</div>
+    </aside>
+  </main>
+
+  <section class="content-grid">
+    <section class="card data">
+      <h2>Live Values</h2>
+      <div id="status" class="status">Work done by net force changes kinetic energy.</div>
+      <div class="stats">
+        <div class="stat"><b>Applied work</b><span id="wAppliedOut">--</span></div>
+        <div class="stat"><b>Friction / loss work</b><span id="wFrictionOut">--</span></div>
+        <div class="stat"><b>Gravity work</b><span id="wGravityOut">--</span></div>
+        <div class="stat"><b>Net work</b><span id="wNetOut">--</span></div>
+        <div class="stat"><b>Initial KE</b><span id="kiOut">--</span></div>
+        <div class="stat"><b>Final KE</b><span id="kfOut">--</span></div>
+        <div class="stat"><b>Final speed</b><span id="vfOut">--</span></div>
+        <div class="stat"><b>Energy observation</b><span id="obsOut">--</span></div>
+      </div>
+    </section>
+
+    <section class="card formula">
+      <h2>Formula Explanation</h2>
+      <p>Work-energy theorem is one of the fastest methods to solve NEET mechanics questions.</p>
+      <div id="formulaBox" class="formula-box">
+        <code>Work done: W = Fs cosθ</code>
+        <code>Kinetic energy: K = ½mv²</code>
+        <code>Work-energy theorem: Wnet = ΔK = Kf − Ki</code>
+        <code>Gravitational potential energy: U = mgh</code>
+        <code>Spring potential energy: Us = ½kx²</code>
+        <code>Friction work: Wf = −fs</code>
+        <code>If only conservative forces act: Mechanical energy remains constant</code>
+        <code>If friction acts: Mechanical energy decreases by work done against friction</code>
+      </div>
+      <p><b>NEET key:</b> Work can be positive, negative, or zero depending on angle between force and displacement.</p>
+    </section>
+
+    <section class="card explain">
+      <h2>Simple NEET Explanation</h2>
+      <ul>
+        <li>Work is energy transferred by force through displacement.</li>
+        <li>If force and displacement are in the same direction, work is positive.</li>
+        <li>If force is opposite to displacement, work is negative.</li>
+        <li>If force is perpendicular to displacement, work is zero.</li>
+        <li>Net work done changes kinetic energy.</li>
+        <li>Friction does negative work and reduces mechanical energy.</li>
+        <li>Gravity can convert potential energy into kinetic energy.</li>
+        <li>Spring stores energy as ½kx² when compressed or stretched.</li>
+      </ul>
+    </section>
+
+    <section class="card traps">
+      <h2>NEET Traps</h2>
+      <ul>
+        <li>Work done by normal reaction is zero when displacement is along surface.</li>
+        <li>Friction usually does negative work.</li>
+        <li>Net work, not only applied work, equals change in kinetic energy.</li>
+        <li>Work is scalar, but force and displacement are vectors.</li>
+        <li>Positive work increases kinetic energy; negative net work decreases kinetic energy.</li>
+        <li>Mechanical energy is conserved only when non-conservative forces are absent.</li>
+        <li>Spring energy depends on x², so compression and extension both store positive energy.</li>
+        <li>Use height h in mgh, not path length unless motion is vertical.</li>
+      </ul>
+    </section>
+
+    <section class="card questions" style="grid-column: 1 / -1; padding: 18px;">
+      <h2>NEET-Style Observation Questions</h2>
+      <ol>
+        <li>What does the work-energy theorem state?</li>
+        <li>When is work done by a force zero?</li>
+        <li>Why does friction decrease mechanical energy?</li>
+        <li>What happens to final speed when net work increases?</li>
+        <li>Why is spring energy always positive?</li>
+        <li>What is the relation between area under F-s graph and work?</li>
+        <li>Why is net work used instead of only applied work?</li>
+      </ol>
+    </section>
+  </section>
+
+  <footer><a href="https://courses.draiacademy.com" target="_blank" rel="noopener">Dr AI Academy</a> | AI Powered Physics for NEET</footer>
+
+  <script>
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const modeEl = document.getElementById('mode');
+    const massEl = document.getElementById('mass');
+    const forceEl = document.getElementById('force');
+    const dispEl = document.getElementById('disp');
+    const uEl = document.getElementById('u');
+    const muEl = document.getElementById('mu');
+    const angleEl = document.getElementById('angle');
+    const springKEl = document.getElementById('springK');
+    const gravityEl = document.getElementById('gravity');
+    const animSpeedEl = document.getElementById('animSpeed');
+    const showForcesEl = document.getElementById('showForces');
+    const showEnergyEl = document.getElementById('showEnergy');
+    const showGraphEl = document.getElementById('showGraph');
+    const showFormulaEl = document.getElementById('showFormula');
+
+    const massVal = document.getElementById('massVal');
+    const forceVal = document.getElementById('forceVal');
+    const dispVal = document.getElementById('dispVal');
+    const uVal = document.getElementById('uVal');
+    const muVal = document.getElementById('muVal');
+    const angleVal = document.getElementById('angleVal');
+    const kVal = document.getElementById('kVal');
+    const gVal = document.getElementById('gVal');
+    const speedVal = document.getElementById('speedVal');
+
+    const wAppliedOut = document.getElementById('wAppliedOut');
+    const wFrictionOut = document.getElementById('wFrictionOut');
+    const wGravityOut = document.getElementById('wGravityOut');
+    const wNetOut = document.getElementById('wNetOut');
+    const kiOut = document.getElementById('kiOut');
+    const kfOut = document.getElementById('kfOut');
+    const vfOut = document.getElementById('vfOut');
+    const obsOut = document.getElementById('obsOut');
+    const statusEl = document.getElementById('status');
+    const formulaBox = document.getElementById('formulaBox');
+
+    const playBtn = document.getElementById('playBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const sampleBtn = document.getElementById('sampleBtn');
+    const formulaBtn = document.getElementById('formulaBtn');
+
+    let isPlaying = false;
+    let progress = 0;
+    let lastFrame = null;
+
+    function fmt(num, unit = '') {
+      if (!Number.isFinite(num)) return '--';
+      return `${num.toFixed(2)} ${unit}`.trim();
+    }
+
+    function degToRad(deg) { return deg * Math.PI / 180; }
+
+    function getParams() {
+      const mode = modeEl.value;
+      const m = Number(massEl.value);
+      const F = Number(forceEl.value);
+      const s = Number(dispEl.value);
+      const u = Number(uEl.value);
+      const mu = Number(muEl.value);
+      const angle = Number(angleEl.value);
+      const k = Number(springKEl.value);
+      const g = Number(gravityEl.value);
+      const speed = Number(animSpeedEl.value);
+      const Ki = 0.5 * m * u * u;
+      let Wapp = F * s;
+      let Wf = 0;
+      let Wg = 0;
+      let springEnergy = 0;
+      let height = 0;
+      let normal = m * g;
+      let obs = '';
+
+      if (mode === 'rough') {
+        const friction = mu * m * g;
+        Wf = -friction * s;
+        obs = 'Friction does negative work.';
+      } else if (mode === 'incline') {
+        height = s * Math.sin(degToRad(angle));
+        Wg = -m * g * height;
+        normal = m * g * Math.cos(degToRad(angle));
+        const friction = mu * normal;
+        Wf = -friction * s;
+        obs = 'Gravity and friction reduce upward motion energy.';
+      } else if (mode === 'spring') {
+        springEnergy = 0.5 * k * s * s;
+        Wapp = F * s;
+        Wf = 0;
+        Wg = 0;
+        obs = 'Work can be stored as spring potential energy.';
+      } else if (mode === 'freefall') {
+        height = s;
+        Wapp = 0;
+        Wg = m * g * height;
+        Wf = 0;
+        obs = 'Gravity converts potential energy into kinetic energy.';
+      } else {
+        obs = 'Applied work increases kinetic energy.';
+      }
+
+      let Wnet = Wapp + Wf + Wg;
+      if (mode === 'spring') Wnet = Wapp - springEnergy;
+      const Kf = Math.max(0, Ki + Wnet);
+      const vf = Math.sqrt((2 * Kf) / m);
+      const frictionMag = Math.abs(Wf / Math.max(s, 0.001));
+      return { mode, m, F, s, u, mu, angle, k, g, speed, Ki, Wapp, Wf, Wg, Wnet, Kf, vf, springEnergy, height, normal, frictionMag, obs };
+    }
+
+    function updateUI(p) {
+      massVal.textContent = `${p.m.toFixed(1)} kg`;
+      forceVal.textContent = `${p.F.toFixed(0)} N`;
+      dispVal.textContent = `${p.s.toFixed(1)} m`;
+      uVal.textContent = `${p.u.toFixed(1)} m/s`;
+      muVal.textContent = p.mu.toFixed(2);
+      angleVal.textContent = `${p.angle}°`;
+      kVal.textContent = `${p.k.toFixed(0)} N/m`;
+      gVal.textContent = `${p.g.toFixed(1)} m/s²`;
+      speedVal.textContent = `${p.speed.toFixed(1)}×`;
+      formulaBox.classList.toggle('hidden', !showFormulaEl.checked);
+
+      wAppliedOut.textContent = fmt(p.Wapp, 'J');
+      wFrictionOut.textContent = fmt(p.Wf, 'J');
+      wGravityOut.textContent = fmt(p.Wg, 'J');
+      wNetOut.textContent = fmt(p.Wnet, 'J');
+      kiOut.textContent = fmt(p.Ki, 'J');
+      kfOut.textContent = fmt(p.Kf, 'J');
+      vfOut.textContent = fmt(p.vf, 'm/s');
+      obsOut.textContent = p.obs;
+
+      if (p.mode === 'horizontal') statusEl.textContent = 'Horizontal smooth surface: applied work mainly changes kinetic energy.';
+      if (p.mode === 'rough') statusEl.textContent = 'Rough surface: friction does negative work and reduces final kinetic energy.';
+      if (p.mode === 'incline') statusEl.textContent = 'Inclined plane: applied work competes with gravity and friction.';
+      if (p.mode === 'spring') statusEl.textContent = 'Spring case: work done can be stored as elastic potential energy.';
+      if (p.mode === 'freefall') statusEl.textContent = 'Free fall: gravitational potential energy converts into kinetic energy.';
+    }
+
+    function drawWatermark() {
+      ctx.save();
+      ctx.globalAlpha = 0.18;
+      ctx.fillStyle = '#0b2d5c';
+      ctx.textAlign = 'right';
+      ctx.font = 'bold 22px Arial';
+      ctx.fillText('Dr AI Academy', canvas.width - 30, canvas.height - 42);
+      ctx.font = '12px Arial';
+      ctx.fillText('AI Powered Physics for NEET', canvas.width - 30, canvas.height - 23);
+      ctx.restore();
+    }
+
+    function drawArrow(x1, y1, x2, y2, color, label = '') {
+      const headLen = 11;
+      const a = Math.atan2(y2 - y1, x2 - x1);
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - headLen * Math.cos(a - Math.PI / 6), y2 - headLen * Math.sin(a - Math.PI / 6));
+      ctx.lineTo(x2 - headLen * Math.cos(a + Math.PI / 6), y2 - headLen * Math.sin(a + Math.PI / 6));
+      ctx.closePath(); ctx.fill();
+      if (label) { ctx.font = 'bold 13px Arial'; ctx.fillText(label, x2 + 8, y2 - 8); }
+      ctx.restore();
+    }
+
+    function drawBlock(x, y, label) {
+      ctx.save();
+      ctx.fillStyle = '#1769ff';
+      ctx.strokeStyle = '#102033';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.roundRect(x - 45, y - 35, 90, 70, 10); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
+      ctx.fillText(label, x, y + 5);
+      ctx.restore();
+    }
+
+    function drawHorizontal(p) {
+      const startX = 120, endX = 610, y = 360;
+      const x = startX + progress * (endX - startX);
+      ctx.save();
+      ctx.fillStyle = '#dbeafe'; ctx.strokeStyle = '#1769ff'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.roundRect(80, y + 35, 590, 35, 8); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#102033'; ctx.font = 'bold 14px Arial'; ctx.fillText(p.mode === 'rough' ? 'Rough surface' : 'Smooth surface', 95, y + 58);
+      ctx.restore();
+      drawBlock(x, y, 'Block');
+      if (showForcesEl.checked) {
+        drawArrow(x, y - 55, x, y - 120, '#0f9d58', 'N');
+        drawArrow(x, y + 55, x, y + 125, '#d93025', 'mg');
+        drawArrow(x + 50, y, x + 135, y, '#0f9d58', 'F');
+        if (p.mode === 'rough') drawArrow(x - 50, y + 15, x - 135, y + 15, '#f57c00', 'friction');
+        drawArrow(x, y - 85, x + 90, y - 85, '#7b1fa2', 'v');
+      }
+    }
+
+    function drawIncline(p) {
+      const baseX = 120, baseY = 500;
+      const rampLen = 540;
+      const theta = degToRad(p.angle);
+      const topX = baseX + rampLen * Math.cos(theta);
+      const topY = baseY - rampLen * Math.sin(theta);
+      const along = 90 + progress * 330;
+      const x = baseX + along * Math.cos(theta);
+      const y = baseY - along * Math.sin(theta) - 25;
+      ctx.save();
+      ctx.fillStyle = '#f7faff'; ctx.strokeStyle = '#1769ff'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(baseX, baseY); ctx.lineTo(topX, topY); ctx.lineTo(topX, baseY); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#102033'; ctx.font = 'bold 14px Arial'; ctx.fillText(`θ = ${p.angle}°`, baseX + 40, baseY - 15);
+      ctx.restore();
+      ctx.save(); ctx.translate(x, y); ctx.rotate(-theta); drawBlock(0, 0, 'Block'); ctx.restore();
+      if (showForcesEl.checked) {
+        drawArrow(x, y, x + 95 * Math.cos(theta), y - 95 * Math.sin(theta), '#0f9d58', 'F');
+        drawArrow(x, y, x, y + 85, '#d93025', 'mg');
+        drawArrow(x, y, x - 70 * Math.sin(theta), y - 70 * Math.cos(theta), '#0f9d58', 'N');
+        if (p.mu > 0) drawArrow(x, y + 40, x - 80 * Math.cos(theta), y + 80 * Math.sin(theta) + 40, '#f57c00', 'friction');
+      }
+    }
+
+    function drawSpring(p) {
+      const wallX = 105, y = 370;
+      const maxComp = 370;
+      const blockX = 560 - progress * maxComp;
+      ctx.save();
+      ctx.fillStyle = '#dbeafe'; ctx.strokeStyle = '#1769ff'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.roundRect(wallX - 25, y - 120, 30, 240, 8); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = '#7b1fa2'; ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(wallX + 5, y);
+      const coils = 14;
+      const length = blockX - wallX - 55;
+      for (let i = 0; i <= coils; i++) {
+        const xx = wallX + 5 + (length * i / coils);
+        const yy = y + (i % 2 === 0 ? -18 : 18);
+        ctx.lineTo(xx, yy);
+      }
+      ctx.lineTo(blockX - 45, y);
+      ctx.stroke();
+      ctx.fillStyle = '#102033'; ctx.font = 'bold 14px Arial'; ctx.fillText('Spring', wallX + 95, y - 45);
+      ctx.restore();
+      drawBlock(blockX, y, 'Block');
+      if (showForcesEl.checked) {
+        drawArrow(blockX + 50, y, blockX + 130, y, '#0f9d58', 'F');
+        drawArrow(blockX - 50, y + 15, blockX - 140, y + 15, '#7b1fa2', 'spring force');
+      }
+    }
+
+    function drawFreefall(p) {
+      const x = 335;
+      const topY = 130;
+      const groundY = 520;
+      const y = topY + progress * (groundY - topY);
+      ctx.save();
+      ctx.strokeStyle = '#1769ff'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(140, groundY + 45); ctx.lineTo(650, groundY + 45); ctx.stroke();
+      ctx.setLineDash([7, 6]);
+      ctx.strokeStyle = '#f57c00';
+      ctx.beginPath(); ctx.moveTo(x + 90, topY); ctx.lineTo(x + 90, groundY); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#102033'; ctx.font = 'bold 14px Arial'; ctx.fillText(`height h = ${p.s.toFixed(1)} m`, x + 105, (topY + groundY) / 2);
+      ctx.restore();
+      drawBlock(x, y, 'm');
+      if (showForcesEl.checked) {
+        drawArrow(x + 70, y, x + 70, y + 90, '#d93025', 'mg');
+        drawArrow(x - 70, y, x - 70, y + 70, '#7b1fa2', 'v');
+      }
+    }
+
+    function drawEnergyBars(p) {
+      if (!showEnergyEl.checked) return;
+      const x = 690, y = 125, w = 215, h = 315;
+      const values = [
+        { label: 'Ki', val: p.Ki, color: '#1769ff' },
+        { label: 'Wnet', val: Math.max(0, p.Wnet), color: '#0f9d58' },
+        { label: 'Kf', val: p.Kf, color: '#7b1fa2' },
+        { label: 'Loss', val: Math.abs(Math.min(0, p.Wf)), color: '#d93025' }
+      ];
+      const max = Math.max(1, ...values.map(v => Math.abs(v.val)));
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.96)'; ctx.strokeStyle = '#dbe6f6'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(x, y, w, h, 14); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#102033'; ctx.font = 'bold 16px Arial'; ctx.fillText('Energy Bars', x + 18, y + 28);
+      values.forEach((bar, i) => {
+        const bx = x + 25 + i * 45;
+        const bh = Math.min(210, Math.abs(bar.val) / max * 210);
+        ctx.fillStyle = bar.color;
+        ctx.fillRect(bx, y + 260 - bh, 30, bh);
+        ctx.fillStyle = '#102033'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center';
+        ctx.fillText(bar.label, bx + 15, y + 282);
+      });
+      ctx.restore();
+    }
+
+    function drawGraph(p) {
+      if (!showGraphEl.checked) return;
+      const x = 55, y = 565, w = 565, h = 110;
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.96)'; ctx.strokeStyle = '#dbe6f6'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(x, y, w, h, 14); ctx.fill(); ctx.stroke();
+      const ox = x + 55, oy = y + 78, gx = x + w - 25;
+      ctx.strokeStyle = '#102033'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(gx, oy); ctx.moveTo(ox, oy); ctx.lineTo(ox, y + 25); ctx.stroke();
+      ctx.fillStyle = '#102033'; ctx.font = 'bold 14px Arial'; ctx.fillText('F-s / Work Graph: Area = Work', x + 18, y + 25);
+      const endX = ox + progress * (gx - ox);
+      const graphY = oy - 45;
+      ctx.fillStyle = 'rgba(15,157,88,0.18)';
+      ctx.fillRect(ox, graphY, Math.max(0, endX - ox), oy - graphY);
+      ctx.strokeStyle = '#0f9d58'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(ox, graphY); ctx.lineTo(gx, graphY); ctx.stroke();
+      ctx.fillStyle = '#0f9d58'; ctx.font = 'bold 12px Arial'; ctx.fillText('constant force', gx - 95, graphY - 7);
+      ctx.restore();
+    }
+
+    function drawConceptBox(p) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.96)'; ctx.strokeStyle = '#dbe6f6'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(45, 70, 580, 85, 14); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#102033'; ctx.font = 'bold 16px Arial'; ctx.fillText('Work-Energy Theorem', 65, 102);
+      ctx.font = '15px Arial'; ctx.fillText('Net work done on the block = Change in kinetic energy', 65, 128);
+      ctx.fillStyle = '#0b45a0'; ctx.font = 'bold 17px Arial'; ctx.fillText(`Wnet = ΔK = ${p.Wnet.toFixed(2)} J`, 390, 128);
+      ctx.restore();
+    }
+
+    function drawScene() {
+      const p = getParams();
+      updateUI(p);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.save();
+      ctx.strokeStyle = '#eef3fb'; ctx.lineWidth = 1;
+      for (let x = 0; x <= canvas.width; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
+      for (let y = 0; y <= canvas.height; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
+      ctx.restore();
+
+      ctx.save();
+      ctx.fillStyle = '#102033'; ctx.font = 'bold 22px Arial'; ctx.fillText('Work-Energy Theorem Visualizer', 28, 38);
+      ctx.font = '15px Arial'; ctx.fillStyle = '#637083'; ctx.fillText('Observe how work changes kinetic, potential, spring, and thermal energy.', 28, 62);
+      ctx.restore();
+
+      drawConceptBox(p);
+      if (p.mode === 'horizontal' || p.mode === 'rough') drawHorizontal(p);
+      if (p.mode === 'incline') drawIncline(p);
+      if (p.mode === 'spring') drawSpring(p);
+      if (p.mode === 'freefall') drawFreefall(p);
+      drawEnergyBars(p);
+      drawGraph(p);
+      drawWatermark();
+    }
+
+    function animate(timestamp) {
+      if (lastFrame === null) lastFrame = timestamp;
+      const dt = Math.min(0.04, (timestamp - lastFrame) / 1000);
+      lastFrame = timestamp;
+      const p = getParams();
+      if (isPlaying) {
+        progress += dt * p.speed * 0.22;
+        if (progress > 1) {
+          progress = 1;
+          isPlaying = false;
+        }
+      }
+      drawScene();
+      requestAnimationFrame(animate);
+    }
+
+    function resetSimulation(redraw = true) {
+      isPlaying = false;
+      progress = 0;
+      lastFrame = null;
+      if (redraw) drawScene();
+    }
+
+    [modeEl, massEl, forceEl, dispEl, uEl, muEl, angleEl, springKEl, gravityEl, animSpeedEl, showForcesEl, showEnergyEl, showGraphEl, showFormulaEl].forEach(el => {
+      el.addEventListener('input', () => resetSimulation());
+      el.addEventListener('change', () => resetSimulation());
+    });
+
+    playBtn.addEventListener('click', () => { isPlaying = true; lastFrame = null; if (progress >= 1) progress = 0; });
+    pauseBtn.addEventListener('click', () => { isPlaying = false; });
+    resetBtn.addEventListener('click', () => resetSimulation());
+    sampleBtn.addEventListener('click', () => {
+      modeEl.value = 'rough'; massEl.value = 5; forceEl.value = 40; dispEl.value = 10; uEl.value = 2; muEl.value = 0.2; gravityEl.value = 9.8; resetSimulation();
+    });
+    formulaBtn.addEventListener('click', () => {
+      showFormulaEl.checked = !showFormulaEl.checked;
+      formulaBox.classList.toggle('hidden', !showFormulaEl.checked);
+      drawScene();
+    });
+
+    drawScene();
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
