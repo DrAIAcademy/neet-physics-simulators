@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AC LCR Resonance Simulator | Dr AI Academy</title>
+  <style>
+    :root{
+      --panel:#ffffff;
+      --ink:#102033;
+      --muted:#637083;
+      --blue:#1769ff;
+      --green:#0f9d58;
+      --orange:#f57c00;
+      --red:#d93025;
+      --purple:#7b1fa2;
+      --line:#dbe6f6;
+      --soft:#f7faff;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      background:linear-gradient(135deg,#eef5ff,#ffffff);
+      color:var(--ink);
+    }
+    header{
+      padding:24px 18px;
+      text-align:center;
+      background:linear-gradient(135deg,#061d49,#0d6efd);
+      color:#fff;
+    }
+    header h1{
+      margin:0 0 8px;
+      font-size:clamp(26px,4vw,42px);
+    }
+    header p{
+      margin:0;
+      font-size:16px;
+      opacity:.95;
+    }
+
+    .wrap{
+      max-width:1260px;
+      margin:22px auto;
+      padding:0 16px;
+      display:grid;
+      grid-template-columns:1fr 390px;
+      gap:18px;
+    }
+
+    .card{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow:0 12px 30px rgba(16,32,51,.08);
+      overflow:hidden;
+    }
+
+    .canvas-card{
+      padding:14px;
+      position:relative;
+    }
+
+    canvas{
+      width:100%;
+      height:auto;
+      display:block;
+      border-radius:14px;
+      background:#fff;
+      border:1px solid #e6eefb;
+      cursor:crosshair;
+    }
+
+    #tooltip{
+      position:absolute;
+      display:none;
+      pointer-events:none;
+      max-width:320px;
+      padding:10px 12px;
+      border-radius:12px;
+      background:rgba(16,32,51,.96);
+      color:#fff;
+      font-size:13px;
+      line-height:1.42;
+      box-shadow:0 10px 24px rgba(16,32,51,.28);
+      z-index:5;
+    }
+
+    .controls{padding:18px}
+    h2{
+      margin:0 0 14px;
+      font-size:20px;
+    }
+    .control{
+      margin-bottom:14px;
+      padding-bottom:11px;
+      border-bottom:1px dashed #d8e3f2;
+    }
+    .control:last-of-type{
+      border-bottom:0;
+      margin-bottom:12px;
+      padding-bottom:0;
+    }
+
+    label{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:center;
+      font-weight:800;
+      margin-bottom:8px;
+    }
+    label span{
+      color:var(--blue);
+      white-space:nowrap;
+    }
+
+    input[type="range"], select{
+      width:100%;
+      accent-color:var(--blue);
+    }
+    select{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid #cbd9ec;
+      background:#fff;
+      color:var(--ink);
+      font-weight:800;
+      font-size:15px;
+    }
+
+    .toggle-row{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      margin-bottom:14px;
+    }
+    .toggle{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      background:#f7faff;
+      border:1px solid #e5eefb;
+      border-radius:12px;
+      padding:9px 10px;
+      font-weight:800;
+      font-size:13px;
+    }
+
+    .buttons{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:8px;
+      margin-top:14px;
+    }
+    button{
+      border:0;
+      padding:11px 10px;
+      border-radius:12px;
+      font-weight:900;
+      cursor:pointer;
+      color:#fff;
+      background:var(--blue);
+      box-shadow:0 8px 16px rgba(23,105,255,.2);
+    }
+    button:nth-child(2){background:var(--orange)}
+    button:nth-child(3){background:var(--red)}
+    button:nth-child(4){background:var(--green)}
+    button:nth-child(5){background:var(--purple);grid-column:1/-1}
+
+    .hint{
+      margin-top:12px;
+      padding:10px;
+      border-radius:12px;
+      background:#eef6ff;
+      border:1px solid #d8eaff;
+      color:#0b45a0;
+      font-size:13px;
+      line-height:1.45;
+      font-weight:700;
+    }
+
+    .legend{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:12px;
+    }
+    .pill{
+      border-radius:999px;
+      padding:7px 10px;
+      background:#f4f7fb;
+      border:1px solid #dde8f6;
+      font-size:13px;
+      font-weight:800;
+    }
+
+    .content-grid{
+      max-width:1260px;
+      margin:0 auto 34px;
+      padding:0 16px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:18px;
+    }
+    .data,.formula,.questions,.traps,.explain{
+      padding:18px;
+    }
+
+    .status{
+      padding:14px 16px;
+      border-radius:14px;
+      font-size:18px;
+      font-weight:900;
+      margin-bottom:16px;
+      text-align:center;
+      background:#eef6ff;
+      color:#0b45a0;
+      border:1px solid #d8eaff;
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+    .stat{
+      background:var(--soft);
+      border:1px solid #e5eefb;
+      border-radius:14px;
+      padding:12px;
+    }
+    .stat b{
+      display:block;
+      color:var(--muted);
+      font-size:13px;
+      margin-bottom:5px;
+    }
+    .stat span{
+      font-size:17px;
+      font-weight:900;
+    }
+
+    .formula p,.questions li,.traps li,.explain li{
+      line-height:1.58;
+    }
+
+    .formula-box{
+      background:#f8fbff;
+      border:1px solid #deebff;
+      border-radius:14px;
+      padding:14px;
+      margin:12px 0;
+      display:block;
+    }
+    .formula-box.hidden{display:none}
+    .formula-box code{
+      display:block;
+      font-size:17px;
+      padding:4px 0;
+      color:#0b45a0;
+      font-weight:800;
+      white-space:normal;
+    }
+
+    ol, ul{
+      margin:0;
+      padding-left:22px;
+    }
+
+    footer{
+      text-align:center;
+      color:var(--muted);
+      padding:0 16px 26px;
+      font-size:14px;
+    }
+    footer a{
+      color:#0b45a0;
+      font-weight:900;
+      text-decoration:none;
+    }
+    footer a:hover{text-decoration:underline}
+
+    @media (max-width:940px){
+      .wrap,.content-grid{grid-template-columns:1fr}
+      .buttons{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AC LCR Resonance Simulator</h1>
+    <p>NEET Physics Interactive Lab: resonance, impedance, current, phase angle, power factor, and voltage across L, C, and R</p>
+  </header>
+
+  <main class="wrap">
+    <section class="card canvas-card">
+      <canvas id="simCanvas" width="980" height="780"></canvas>
+      <div id="tooltip"></div>
+
+      <div class="legend">
+        <span class="pill">Blue: circuit panels</span>
+        <span class="pill">Green arrows: current / phasor</span>
+        <span class="pill">Red: resistor voltage</span>
+        <span class="pill">Orange: inductor voltage</span>
+        <span class="pill">Purple: capacitor voltage</span>
+      </div>
+    </section>
+
+    <aside class="card controls">
+      <h2>Controls</h2>
+
+      <div class="control">
+        <label>Mode <span id="modeText">Series LCR</span></label>
+        <select id="mode">
+          <option value="full" selected>Full Simulator</option>
+          <option value="phasor">Phasor Focus</option>
+          <option value="resonance">Resonance Focus</option>
+        </select>
+      </div>
+
+      <div class="control">
+        <label>Resistance, R <span id="rVal">20 Ω</span></label>
+        <input id="rSlider" type="range" min="1" max="100" step="1" value="20">
+      </div>
+
+      <div class="control">
+        <label>Inductance, L <span id="lVal">100 mH</span></label>
+        <input id="lSlider" type="range" min="10" max="500" step="5" value="100">
+      </div>
+
+      <div class="control">
+        <label>Capacitance, C <span id="cVal">10 µF</span></label>
+        <input id="cSlider" type="range" min="1" max="100" step="1" value="10">
+      </div>
+
+      <div class="control">
+        <label>AC Voltage, V <span id="vVal">20 V</span></label>
+        <input id="vSlider" type="range" min="1" max="100" step="1" value="20">
+      </div>
+
+      <div class="control">
+        <label>Frequency, f <span id="fVal">50 Hz</span></label>
+        <input id="fSlider" type="range" min="1" max="500" step="1" value="50">
+      </div>
+
+      <div class="control">
+        <label>Animation speed <span id="speedVal">1.0×</span></label>
+        <input id="speedSlider" type="range" min="0.3" max="3" step="0.1" value="1">
+      </div>
+
+      <div class="toggle-row">
+        <label class="toggle"><input id="showPhasor" type="checkbox" checked> Show phasor</label>
+        <label class="toggle"><input id="showCurve" type="checkbox" checked> Show graph</label>
+        <label class="toggle"><input id="showFormula" type="checkbox" checked> Show formulas</label>
+        <label class="toggle"><input id="showTooltips" type="checkbox" checked> Hover info</label>
+      </div>
+
+      <div class="buttons">
+        <button id="playBtn">Play</button>
+        <button id="pauseBtn">Pause</button>
+        <button id="resetBtn">Reset</button>
+        <button id="sampleBtn">Sample Resonance Case</button>
+        <button id="formulaBtn">Show/Hide Formulas</button>
+      </div>
+
+      <div class="hint">
+        Tip: At resonance in series LCR circuit, <b>X<sub>L</sub> = X<sub>C</sub></b>, so
+        <b>Z = R</b>, <b>current is maximum</b>, and <b>power factor = 1</b>.
+      </div>
+    </aside>
+  </main>
+
+  <section class="content-grid">
+    <section class="card data">
+      <h2>Live Values</h2>
+      <div id="status" class="status">Series LCR circuit: current depends on total impedance.</div>
+
+      <div class="stats">
+        <div class="stat"><b>Inductive reactance, X<sub>L</sub></b><span id="xlOut">--</span></div>
+        <div class="stat"><b>Capacitive reactance, X<sub>C</sub></b><span id="xcOut">--</span></div>
+        <div class="stat"><b>Impedance, Z</b><span id="zOut">--</span></div>
+        <div class="stat"><b>Current, I</b><span id="iOut">--</span></div>
+        <div class="stat"><b>Resonant frequency, f<sub>r</sub></b><span id="frOut">--</span></div>
+        <div class="stat"><b>Phase angle, φ</b><span id="phiOut">--</span></div>
+        <div class="stat"><b>Power factor, cosφ</b><span id="pfOut">--</span></div>
+        <div class="stat"><b>Condition</b><span id="condOut">--</span></div>
+        <div class="stat"><b>V<sub>R</sub> = IR</b><span id="vrOut">--</span></div>
+        <div class="stat"><b>V<sub>L</sub> = IX<sub>L</sub></b><span id="vlOut">--</span></div>
+        <div class="stat"><b>V<sub>C</sub> = IX<sub>C</sub></b><span id="vcOut">--</span></div>
+        <div class="stat"><b>Bandwidth (approx)</b><span id="bwOut">--</span></div>
+      </div>
+    </section>
+
+    <section class="card formula">
+      <h2>Formula Explanation</h2>
+      <p>These are the important AC LCR formulas from NEET point of view.</p>
+
+      <div id="formulaBox" class="formula-box">
+        <code>Inductive reactance: X<sub>L</sub> = 2πfL</code>
+        <code>Capacitive reactance: X<sub>C</sub> = 1 / (2πfC)</code>
+        <code>Impedance of series LCR: Z = √(R² + (X<sub>L</sub> − X<sub>C</sub>)²)</code>
+        <code>Current: I = V / Z</code>
+        <code>Phase angle: tanφ = (X<sub>L</sub> − X<sub>C</sub>) / R</code>
+        <code>Power factor: cosφ = R / Z</code>
+        <code>Resonance condition: X<sub>L</sub> = X<sub>C</sub></code>
+        <code>Resonant frequency: f<sub>r</sub> = 1 / (2π√LC)</code>
+        <code>At resonance: Z = R, current is maximum, φ = 0, power factor = 1</code>
+      </div>
+
+      <p><b>NEET key:</b> At resonance, the circuit behaves like a pure resistor.</p>
+    </section>
+
+    <section class="card explain">
+      <h2>Simple NEET Explanation</h2>
+      <ul>
+        <li>R opposes current by resistance.</li>
+        <li>L opposes change in current, so it gives inductive reactance.</li>
+        <li>C opposes change in voltage, so it gives capacitive reactance.</li>
+        <li>In AC, total opposition is called impedance.</li>
+        <li>If X<sub>L</sub> &gt; X<sub>C</sub>, circuit is inductive.</li>
+        <li>If X<sub>C</sub> &gt; X<sub>L</sub>, circuit is capacitive.</li>
+        <li>At resonance, X<sub>L</sub> and X<sub>C</sub> cancel each other.</li>
+        <li>So only R remains and current becomes maximum.</li>
+      </ul>
+    </section>
+
+    <section class="card traps">
+      <h2>NEET Traps</h2>
+      <ul>
+        <li>At resonance, impedance is minimum, not maximum.</li>
+        <li>At resonance, current is maximum.</li>
+        <li>At resonance, power factor is 1, not 0.</li>
+        <li>V<sub>L</sub> and V<sub>C</sub> can be large even when net reactive part is zero.</li>
+        <li>X<sub>L</sub> increases with frequency.</li>
+        <li>X<sub>C</sub> decreases with frequency.</li>
+        <li>Inductive circuit means current lags voltage.</li>
+        <li>Capacitive circuit means current leads voltage.</li>
+      </ul>
+    </section>
+
+    <section class="card questions" style="grid-column:1/-1;padding:18px">
+      <h2>NEET-Style Observation Questions</h2>
+      <ol>
+        <li>What happens to X<sub>L</sub> when frequency increases?</li>
+        <li>What happens to X<sub>C</sub> when frequency increases?</li>
+        <li>When does resonance occur in a series LCR circuit?</li>
+        <li>Why is current maximum at resonance?</li>
+        <li>What is the power factor at resonance?</li>
+        <li>If X<sub>L</sub> &gt; X<sub>C</sub>, is the circuit inductive or capacitive?</li>
+        <li>What is the phase angle at resonance?</li>
+      </ol>
+    </section>
+  </section>
+
+  <footer>
+    <a href="https://courses.draiacademy.com" target="_blank" rel="noopener">Dr AI Academy</a> | AI Powered Physics for NEET
+  </footer>
+
+  <script>
+    const canvas = document.getElementById("simCanvas");
+    const ctx = canvas.getContext("2d");
+    const tooltip = document.getElementById("tooltip");
+
+    const modeEl = document.getElementById("mode");
+    const rSlider = document.getElementById("rSlider");
+    const lSlider = document.getElementById("lSlider");
+    const cSlider = document.getElementById("cSlider");
+    const vSlider = document.getElementById("vSlider");
+    const fSlider = document.getElementById("fSlider");
+    const speedSlider = document.getElementById("speedSlider");
+
+    const showPhasorEl = document.getElementById("showPhasor");
+    const showCurveEl = document.getElementById("showCurve");
+    const showFormulaEl = document.getElementById("showFormula");
+    const showTooltipsEl = document.getElementById("showTooltips");
+
+    const rVal = document.getElementById("rVal");
+    const lVal = document.getElementById("lVal");
+    const cVal = document.getElementById("cVal");
+    const vVal = document.getElementById("vVal");
+    const fVal = document.getElementById("fVal");
+    const speedVal = document.getElementById("speedVal");
+    const modeText = document.getElementById("modeText");
+
+    const statusEl = document.getElementById("status");
+    const formulaBox = document.getElementById("formulaBox");
+
+    const xlOut = document.getElementById("xlOut");
+    const xcOut = document.getElementById("xcOut");
+    const zOut  = document.getElementById("zOut");
+    const iOut  = document.getElementById("iOut");
+    const frOut = document.getElementById("frOut");
+    const phiOut = document.getElementById("phiOut");
+    const pfOut = document.getElementById("pfOut");
+    const condOut = document.getElementById("condOut");
+    const vrOut = document.getElementById("vrOut");
+    const vlOut = document.getElementById("vlOut");
+    const vcOut = document.getElementById("vcOut");
+    const bwOut = document.getElementById("bwOut");
+
+    const playBtn = document.getElementById("playBtn");
+    const pauseBtn = document.getElementById("pauseBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const sampleBtn = document.getElementById("sampleBtn");
+    const formulaBtn = document.getElementById("formulaBtn");
+
+    let playing = false;
+    let last = null;
+    let phase = 0;
+    let hoverItems = [];
+
+    function fmt(n, u=''){
+      if(!Number.isFinite(n)) return '--';
+      if(Math.abs(n) >= 1e6 || (Math.abs(n) < 0.001 && n !== 0)) return `${n.toExponential(2)} ${u}`.trim();
+      return `${n.toFixed(3)} ${u}`.trim();
+    }
+
+    function addHover(x,y,w,h,title,text){
+      hoverItems.push({x,y,w,h,title,text});
+    }
+
+    function rr(x,y,w,h,r){
+      ctx.beginPath();
+      ctx.roundRect(x,y,w,h,r);
+    }
+
+    function labelBox(x,y,text,color='#102033'){
+      ctx.save();
+      ctx.fillStyle='rgba(255,255,255,.96)';
+      ctx.strokeStyle='#dbe6f6';
+      ctx.lineWidth=1.5;
+      ctx.font='bold 13px Arial';
+      const w = ctx.measureText(text).width + 18;
+      rr(x,y,w,26,8);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle=color;
+      ctx.fillText(text,x+9,y+17);
+      ctx.restore();
+    }
+
+    function arrow(x1,y1,x2,y2,color,label=''){
+      const ang = Math.atan2(y2-y1,x2-x1);
+      const h = 11;
+      ctx.save();
+      ctx.strokeStyle=color;
+      ctx.fillStyle=color;
+      ctx.lineWidth=4;
+      ctx.beginPath();
+      ctx.moveTo(x1,y1);
+      ctx.lineTo(x2,y2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x2,y2);
+      ctx.lineTo(x2-h*Math.cos(ang-Math.PI/6), y2-h*Math.sin(ang-Math.PI/6));
+      ctx.lineTo(x2-h*Math.cos(ang+Math.PI/6), y2-h*Math.sin(ang+Math.PI/6));
+      ctx.closePath();
+      ctx.fill();
+      if(label){
+        ctx.font='bold 13px Arial';
+        ctx.fillText(label, x2+8, y2-8);
+      }
+      ctx.restore();
+    }
+
+    function getData(){
+      const mode = modeEl.value;
+      const R = +rSlider.value;
+      const LmH = +lSlider.value;
+      const CuF = +cSlider.value;
+      const V = +vSlider.value;
+      const f = +fSlider.value;
+      const speed = +speedSlider.value;
+
+      const L = LmH / 1000;
+      const C = CuF * 1e-6;
+      const w = 2 * Math.PI * f;
+
+      const XL = w * L;
+      const XC = 1 / (w * C);
+      const reactive = XL - XC;
+      const Z = Math.sqrt(R*R + reactive*reactive);
+      const I = V / Z;
+      const phi = Math.atan2(reactive, R);
+      const pf = R / Z;
+      const fr = 1 / (2*Math.PI*Math.sqrt(L*C));
+      const VR = I * R;
+      const VL = I * XL;
+      const VC = I * XC;
+      const BW = R / (2*Math.PI*L);
+
+      let condition = '';
+      if (Math.abs(reactive) < 0.5) condition = 'Resonance';
+      else if (reactive > 0) condition = 'Inductive (current lags)';
+      else condition = 'Capacitive (current leads)';
+
+      return {
+        mode, R, LmH, CuF, V, f, speed,
+        L, C, XL, XC, reactive, Z, I, phi, pf, fr, VR, VL, VC, BW, condition
+      };
+    }
+
+    function updateUI(d){
+      rVal.textContent = `${d.R} Ω`;
+      lVal.textContent = `${d.LmH} mH`;
+      cVal.textContent = `${d.CuF} µF`;
+      vVal.textContent = `${d.V} V`;
+      fVal.textContent = `${d.f} Hz`;
+      speedVal.textContent = `${d.speed.toFixed(1)}×`;
+      modeText.textContent = modeEl.options[modeEl.selectedIndex].text;
+
+      xlOut.textContent = fmt(d.XL, 'Ω');
+      xcOut.textContent = fmt(d.XC, 'Ω');
+      zOut.textContent  = fmt(d.Z, 'Ω');
+      iOut.textContent  = fmt(d.I, 'A');
+      frOut.textContent = fmt(d.fr, 'Hz');
+      phiOut.textContent = fmt(d.phi * 180 / Math.PI, '°');
+      pfOut.textContent = fmt(d.pf, '');
+      condOut.textContent = d.condition;
+      vrOut.textContent = fmt(d.VR, 'V');
+      vlOut.textContent = fmt(d.VL, 'V');
+      vcOut.textContent = fmt(d.VC, 'V');
+      bwOut.textContent = fmt(d.BW, 'Hz');
+
+      formulaBox.classList.toggle('hidden', !showFormulaEl.checked);
+
+      if (d.condition === 'Resonance'){
+        statusEl.textContent = 'Resonance: XL = XC, Z = R, current is maximum, and power factor = 1.';
+      } else if (d.reactive > 0){
+        statusEl.textContent = 'Inductive region: XL > XC, so current lags voltage.';
+      } else {
+        statusEl.textContent = 'Capacitive region: XC > XL, so current leads voltage.';
+      }
+    }
+
+    function drawBackgroundGrid(){
+      ctx.save();
+      ctx.strokeStyle='#eef3fb';
+      ctx.lineWidth=1;
+      for(let x=0;x<=canvas.width;x+=40){
+        ctx.beginPath();
+        ctx.moveTo(x,0);
+        ctx.lineTo(x,canvas.height);
+        ctx.stroke();
+      }
+      for(let y=0;y<=canvas.height;y+=40){
+        ctx.beginPath();
+        ctx.moveTo(0,y);
+        ctx.lineTo(canvas.width,y);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawHeader(){
+      ctx.fillStyle='#102033';
+      ctx.font='bold 22px Arial';
+      ctx.fillText('AC LCR Resonance Visualizer',28,38);
+      ctx.font='15px Arial';
+      ctx.fillStyle='#637083';
+      ctx.fillText('Clean layout: circuit, phasor, graph, and resonance info are separated to avoid overlap.',28,62);
+    }
+
+    function panel(x,y,w,h,title){
+      ctx.save();
+      ctx.fillStyle='rgba(255,255,255,.97)';
+      ctx.strokeStyle='#dbe6f6';
+      ctx.lineWidth=2;
+      rr(x,y,w,h,16);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle='#102033';
+      ctx.font='bold 16px Arial';
+      ctx.fillText(title,x+18,y+28);
+      ctx.restore();
+    }
+
+    function drawCircuitPanel(d){
+      const x=55, y=95, w=390, h=285;
+      panel(x,y,w,h,'Series LCR Circuit');
+      addHover(x,y,w,h,'Series LCR circuit','This is a series AC circuit with resistor, inductor, and capacitor connected one after another.');
+
+      // Circuit outline
+      const left = x+45, right = x+w-45, top = y+75, bottom = y+h-45;
+      ctx.save();
+      ctx.strokeStyle='#1769ff';
+      ctx.lineWidth=5;
+      ctx.beginPath();
+      ctx.moveTo(left, top);
+      ctx.lineTo(left+40, top);
+      ctx.lineTo(left+40, y+150);
+      ctx.lineTo(right-40, y+150);
+      ctx.lineTo(right-40, top);
+      ctx.lineTo(right, top);
+      ctx.moveTo(right, top);
+      ctx.lineTo(right, bottom);
+      ctx.lineTo(left, bottom);
+      ctx.lineTo(left, top);
+      ctx.stroke();
+      ctx.restore();
+
+      // AC source left bottom
+      ctx.save();
+      ctx.strokeStyle='#f57c00';
+      ctx.lineWidth=4;
+      ctx.beginPath();
+      ctx.arc(left, (top+bottom)/2, 28, 0, Math.PI*2);
+      ctx.stroke();
+      ctx.font='bold 16px Arial';
+      ctx.fillStyle='#102033';
+      ctx.textAlign='center';
+      ctx.fillText('~', left, (top+bottom)/2 + 6);
+      ctx.fillText(`${d.V} V`, left, (top+bottom)/2 + 52);
+      ctx.restore();
+      addHover(left-34, (top+bottom)/2 -34, 68, 90, 'AC source', 'AC source provides alternating voltage to the series LCR circuit.');
+
+      // Resistor top
+      const rx = left+85, ry = top-18;
+      ctx.save();
+      ctx.fillStyle='#fff7f7';
+      ctx.strokeStyle='#d93025';
+      ctx.lineWidth=4;
+      rr(rx,ry,78,36,8);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle='#102033';
+      ctx.font='bold 13px Arial';
+      ctx.textAlign='center';
+      ctx.fillText(`R = ${d.R}Ω`, rx+39, ry+23);
+      ctx.restore();
+      addHover(rx,ry,78,36,'Resistor','Resistor produces voltage drop VR = IR and dissipates power.');
+
+      // Inductor top
+      const lx = rx+105, ly = top+1;
+      ctx.save();
+      ctx.strokeStyle='#f57c00';
+      ctx.lineWidth=4;
+      for(let i=0;i<4;i++){
+        ctx.beginPath();
+        ctx.arc(lx+14*i+7, ly, 7, Math.PI, 0);
+        ctx.stroke();
+      }
+      ctx.fillStyle='#102033';
+      ctx.font='bold 13px Arial';
+      ctx.fillText(`L = ${d.LmH}mH`, lx+30, ly-14);
+      ctx.restore();
+      addHover(lx-4, ly-25, 72, 32,'Inductor','Inductor gives reactance XL = 2πfL. Its voltage leads current by 90°.');
+
+      // Capacitor top
+      const cx = lx+95, cy = top;
+      ctx.save();
+      ctx.strokeStyle='#7b1fa2';
+      ctx.lineWidth=4;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy-12);
+      ctx.lineTo(cx, cy+12);
+      ctx.moveTo(cx+16, cy-12);
+      ctx.lineTo(cx+16, cy+12);
+      ctx.stroke();
+      ctx.fillStyle='#102033';
+      ctx.font='bold 13px Arial';
+      ctx.fillText(`C = ${d.CuF}µF`, cx+8, cy-18);
+      ctx.restore();
+      addHover(cx-10, cy-28, 38, 40,'Capacitor','Capacitor gives reactance XC = 1/(2πfC). Its voltage lags current by 90°.');
+
+      // Current arrow
+      ctx.save();
+      ctx.strokeStyle='#0f9d58';
+      ctx.fillStyle='#0f9d58';
+      ctx.lineWidth=4;
+      ctx.beginPath();
+      ctx.moveTo(left+90,bottom+2);
+      ctx.lineTo(left+175,bottom+2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(left+175,bottom+2);
+      ctx.lineTo(left+163,bottom-6);
+      ctx.lineTo(left+163,bottom+10);
+      ctx.closePath();
+      ctx.fill();
+      ctx.font='bold 13px Arial';
+      ctx.fillText(`I = ${d.I.toFixed(3)} A`, left+128, bottom-10);
+      ctx.restore();
+
+      // Moving dots
+      if(playing){
+        const dots = 11;
+        ctx.save();
+        ctx.fillStyle='#0f9d58';
+        for(let i=0;i<dots;i++){
+          const t = (phase*90 + i*65) % 860;
+          const path = getCircuitPathPoint(left, top, right, bottom, t);
+          ctx.beginPath();
+          ctx.arc(path.x, path.y, 4, 0, Math.PI*2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      labelBox(x+18, y+h-30, `f = ${d.f} Hz`, '#1769ff');
+      labelBox(x+118, y+h-30, `fr = ${d.fr.toFixed(2)} Hz`, '#1769ff');
+      labelBox(x+245, y+h-30, d.condition, d.condition==='Resonance' ? '#0f9d58' : (d.reactive>0 ? '#f57c00' : '#7b1fa2'));
+    }
+
+    function getCircuitPathPoint(left, top, right, bottom, dist){
+      const segments = [
+        {x1:left, y1:bottom, x2:right, y2:bottom},
+        {x1:right, y1:bottom, x2:right, y2:top},
+        {x1:right, y1:top, x2:left, y2:top},
+        {x1:left, y1:top, x2:left, y2:bottom}
+      ];
+      const lengths = segments.map(s => Math.hypot(s.x2-s.x1, s.y2-s.y1));
+      let remaining = dist;
+      for(let i=0;i<segments.length;i++){
+        if(remaining <= lengths[i]){
+          const s = segments[i];
+          const t = remaining / lengths[i];
+          return {x:s.x1 + (s.x2-s.x1)*t, y:s.y1 + (s.y2-s.y1)*t};
+        }
+        remaining -= lengths[i];
+      }
+      return {x:left, y:bottom};
+    }
+
+    function drawPhasorPanel(d){
+      if(!showPhasorEl.checked) return;
+      const x=495, y=95, w=430, h=285;
+      panel(x,y,w,h,'Phasor Diagram');
+      addHover(x,y,w,h,'Phasor panel','VR is along current axis. VL is upward. VC is downward. Net reactive voltage depends on VL − VC.');
+
+      const ox = x+160;
+      const oy = y+195;
+      const scale = 90 / Math.max(1, d.VR, Math.abs(d.VL-d.VC), d.V);
+
+      // axes
+      ctx.save();
+      ctx.strokeStyle='#c9d8ee';
+      ctx.lineWidth=2;
+      ctx.beginPath();
+      ctx.moveTo(ox-100, oy);
+      ctx.lineTo(ox+190, oy);
+      ctx.moveTo(ox, oy+90);
+      ctx.lineTo(ox, oy-110);
+      ctx.stroke();
+      ctx.restore();
+
+      // VR
+      arrow(ox, oy, ox + d.VR*scale, oy, '#d93025', 'VR');
+      // VL
+      arrow(ox + d.VR*scale, oy, ox + d.VR*scale, oy - d.VL*scale, '#f57c00', 'VL');
+      // VC
+      arrow(ox + d.VR*scale, oy, ox + d.VR*scale, oy + d.VC*scale, '#7b1fa2', 'VC');
+
+      // Net V
+      arrow(ox, oy, ox + d.VR*scale, oy - (d.VL-d.VC)*scale, '#0f9d58', 'V');
+
+      ctx.save();
+      ctx.fillStyle='#102033';
+      ctx.font='bold 13px Arial';
+      ctx.fillText('Current reference axis', ox+30, oy+20);
+      ctx.fillText(`φ = ${(d.phi*180/Math.PI).toFixed(2)}°`, x+275, y+52);
+      ctx.restore();
+
+      // Angle arc
+      const endAng = -Math.atan2((d.VL-d.VC), d.VR);
+      ctx.save();
+      ctx.strokeStyle='#0f9d58';
+      ctx.lineWidth=3;
+      ctx.beginPath();
+      ctx.arc(ox, oy, 36, 0, endAng, endAng<0);
+      ctx.stroke();
+      ctx.restore();
+
+      labelBox(x+240, y+230, `cosφ = ${d.pf.toFixed(3)}`, '#0f9d58');
+      labelBox(x+240, y+260, d.condition, d.condition==='Resonance' ? '#0f9d58' : (d.reactive>0 ? '#f57c00' : '#7b1fa2'));
+    }
+
+    function drawInfoPanel(d){
+      const x=55, y=410, w=390, h=305;
+      panel(x,y,w,h,'Resonance Summary');
+      addHover(x,y,w,h,'Resonance summary','This panel shows the most important NEET ideas for series LCR resonance.');
+
+      const lines = [
+        `XL = ${d.XL.toFixed(3)} Ω`,
+        `XC = ${d.XC.toFixed(3)} Ω`,
+        `Z = ${d.Z.toFixed(3)} Ω`,
+        `I = ${d.I.toFixed(3)} A`,
+        `fr = ${d.fr.toFixed(3)} Hz`,
+        `Power factor = ${d.pf.toFixed(3)}`,
+        `Condition: ${d.condition}`
+      ];
+
+      ctx.save();
+      ctx.fillStyle='#102033';
+      ctx.font='bold 15px Arial';
+      let yy = y+62;
+      lines.forEach(line=>{
+        ctx.fillText(line, x+22, yy);
+        yy += 32;
+      });
+      ctx.restore();
+
+      // Resonance meter
+      const meterX = x+255, meterY = y+83;
+      ctx.save();
+      ctx.fillStyle='rgba(255,255,255,.96)';
+      ctx.strokeStyle='#dbe6f6';
+      ctx.lineWidth=2;
+      rr(meterX, meterY, 105, 180, 14);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle='#102033';
+      ctx.font='bold 14px Arial';
+      ctx.fillText('Resonance', meterX+18, meterY+25);
+
+      const closeness = Math.min(1, Math.abs(d.f - d.fr)/Math.max(1,d.fr) * 4);
+      const barH = 110 * (1 - closeness);
+      ctx.fillStyle = d.condition==='Resonance' ? '#0f9d58' : '#f57c00';
+      ctx.fillRect(meterX+38, meterY+145-barH, 28, barH);
+      ctx.fillStyle='#102033';
+      ctx.font='bold 12px Arial';
+      ctx.fillText(d.condition==='Resonance' ? 'Matched' : 'Not exact', meterX+18, meterY+165);
+      ctx.restore();
+      addHover(meterX, meterY, 105, 180, 'Resonance meter', 'When source frequency becomes equal to resonant frequency, the circuit reaches resonance.');
+    }
+
+    function drawGraphPanel(d){
+      if(!showCurveEl.checked) return;
+      const x=495, y=410, w=430, h=305;
+      panel(x,y,w,h,'Current vs Frequency Graph');
+      addHover(x,y,w,h,'Resonance graph','This curve shows how current changes with frequency. Peak current occurs near resonance.');
+
+      const gx = x+54, gy = y+235, gw = 330, gh = 170;
+
+      // axes
+      ctx.save();
+      ctx.strokeStyle='#102033';
+      ctx.lineWidth=2.5;
+      ctx.beginPath();
+      ctx.moveTo(gx, gy);
+      ctx.lineTo(gx+gw, gy);
+      ctx.moveTo(gx, gy);
+      ctx.lineTo(gx, gy-gh);
+      ctx.stroke();
+
+      ctx.font='bold 12px Arial';
+      ctx.fillStyle='#102033';
+      ctx.fillText('f', gx+gw+12, gy+5);
+      ctx.fillText('I', gx-15, gy-gh-8);
+      ctx.restore();
+
+      // curve
+      const fMax = 500;
+      let maxI = 0;
+      const points = [];
+      for(let ff=1; ff<=fMax; ff+=2){
+        const w = 2*Math.PI*ff;
+        const XL = w*d.L;
+        const XC = 1/(w*d.C);
+        const Z = Math.sqrt(d.R*d.R + (XL-XC)*(XL-XC));
+        const I = d.V / Z;
+        points.push({ff,I});
+        if(I>maxI) maxI = I;
+      }
+
+      ctx.save();
+      ctx.strokeStyle='#1769ff';
+      ctx.lineWidth=3;
+      ctx.beginPath();
+      points.forEach((p,idx)=>{
+        const px = gx + (p.ff/fMax)*gw;
+        const py = gy - (p.I/maxI)*145;
+        if(idx===0) ctx.moveTo(px,py);
+        else ctx.lineTo(px,py);
+      });
+      ctx.stroke();
+      ctx.restore();
+
+      // resonance marker
+      const frx = gx + (Math.min(fMax,d.fr)/fMax)*gw;
+      ctx.save();
+      ctx.strokeStyle='#0f9d58';
+      ctx.lineWidth=2;
+      ctx.setLineDash([7,6]);
+      ctx.beginPath();
+      ctx.moveTo(frx, gy);
+      ctx.lineTo(frx, gy-gh+10);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle='#0f9d58';
+      ctx.font='bold 12px Arial';
+      ctx.fillText(`fr = ${d.fr.toFixed(1)} Hz`, frx-30, gy-gh+5);
+      ctx.restore();
+
+      // current frequency point
+      const cx = gx + (d.f/fMax)*gw;
+      const cy = gy - (d.I/maxI)*145;
+      ctx.save();
+      ctx.fillStyle='#d93025';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 6, 0, Math.PI*2);
+      ctx.fill();
+      ctx.font='bold 12px Arial';
+      ctx.fillText('Current setting', cx+10, cy-8);
+      ctx.restore();
+
+      // Scale labels
+      ctx.save();
+      ctx.fillStyle='#637083';
+      ctx.font='11px Arial';
+      ctx.fillText('0', gx-10, gy+18);
+      ctx.fillText('500 Hz', gx+gw-18, gy+18);
+      ctx.fillText(maxI.toFixed(2)+' A', gx-38, gy-gh+5);
+      ctx.restore();
+    }
+
+    function drawWatermark(){
+      ctx.save();
+      ctx.globalAlpha=.16;
+      ctx.fillStyle='#0b2d5c';
+      ctx.textAlign='right';
+      ctx.font='bold 24px Arial';
+      ctx.fillText('Dr AI Academy', canvas.width-28, canvas.height-42);
+      ctx.font='12px Arial';
+      ctx.fillText('AI Powered Physics for NEET', canvas.width-28, canvas.height-22);
+      ctx.restore();
+    }
+
+    function drawScene(){
+      const d = getData();
+      updateUI(d);
+      hoverItems = [];
+
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      drawBackgroundGrid();
+      drawHeader();
+
+      if(d.mode === 'full'){
+        drawCircuitPanel(d);
+        drawPhasorPanel(d);
+        drawInfoPanel(d);
+        drawGraphPanel(d);
+      } else if(d.mode === 'phasor'){
+        drawCircuitPanel(d);
+        drawPhasorPanel(d);
+        drawInfoPanel(d);
+      } else if(d.mode === 'resonance'){
+        drawCircuitPanel(d);
+        drawInfoPanel(d);
+        drawGraphPanel(d);
+      }
+
+      drawWatermark();
+    }
+
+    function animate(ts){
+      if(last === null) last = ts;
+      const dt = Math.min(0.04, (ts - last)/1000);
+      last = ts;
+
+      const d = getData();
+      if(playing){
+        phase += dt * d.speed;
+      }
+      drawScene();
+      requestAnimationFrame(animate);
+    }
+
+    function resetView(){
+      playing = false;
+      last = null;
+      phase = 0;
+      tooltip.style.display='none';
+      drawScene();
+    }
+
+    function sampleResonance(){
+      // Pick a nice resonance around 50 Hz with L=100mH => C ~ 100 uF
+      modeEl.value = 'full';
+      rSlider.value = 20;
+      lSlider.value = 100;
+      cSlider.value = 100;
+      vSlider.value = 20;
+      fSlider.value = 50;
+      speedSlider.value = 1;
+      showPhasorEl.checked = true;
+      showCurveEl.checked = true;
+      resetView();
+    }
+
+    function canvasPoint(evt){
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x:(evt.clientX-rect.left)*canvas.width/rect.width,
+        y:(evt.clientY-rect.top)*canvas.height/rect.height,
+        cssX:evt.clientX-rect.left,
+        cssY:evt.clientY-rect.top
+      };
+    }
+
+    canvas.addEventListener('mousemove', evt=>{
+      if(!showTooltipsEl.checked){
+        tooltip.style.display='none';
+        return;
+      }
+      const p = canvasPoint(evt);
+      const item = hoverItems.find(it => p.x>=it.x && p.x<=it.x+it.w && p.y>=it.y && p.y<=it.y+it.h);
+      if(item){
+        tooltip.innerHTML = `<strong>${item.title}</strong><br>${item.text}`;
+        tooltip.style.display='block';
+        tooltip.style.left = `${Math.min(p.cssX+14, canvas.clientWidth-330)}px`;
+        tooltip.style.top = `${Math.max(12, p.cssY+14)}px`;
+      } else {
+        tooltip.style.display='none';
+      }
+    });
+
+    canvas.addEventListener('mouseleave', ()=> tooltip.style.display='none');
+
+    [
+      modeEl, rSlider, lSlider, cSlider, vSlider, fSlider, speedSlider,
+      showPhasorEl, showCurveEl, showFormulaEl, showTooltipsEl
+    ].forEach(el=>{
+      el.addEventListener('input', resetView);
+      el.addEventListener('change', resetView);
+    });
+
+    playBtn.onclick = ()=>{ playing = true; last = null; };
+    pauseBtn.onclick = ()=>{ playing = false; };
+    resetBtn.onclick = resetView;
+    sampleBtn.onclick = sampleResonance;
+    formulaBtn.onclick = ()=>{
+      showFormulaEl.checked = !showFormulaEl.checked;
+      formulaBox.classList.toggle('hidden', !showFormulaEl.checked);
+      drawScene();
+    };
+
+    drawScene();
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
